@@ -1,0 +1,62 @@
+/**
+ * @file		config.hpp
+ * The configuration header for the '@PROJECT_NAME@' project.
+ *
+ * @author		Jennifer Yao
+ * @date		9/19/2015
+ * @copyright	All rights reserved.
+ */
+
+/* config.hpp. Generated from config.hpp.in by cmake. */
+
+#ifndef CALC_CONFIG_HPP
+#define CALC_CONFIG_HPP
+
+/* Name of package. */
+#define PACKAGE "@PACKAGE_NAME@"
+
+/* Version number of package. */
+#define VERSION "@PACKAGE_VERSION@"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "@PACKAGE_NAME@"
+
+/* Define to the one symbol short name of this package. */
+#define PACKAGE_TARNAME "@PACKAGE_TARNAME@"
+
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "@PACKAGE_VERSION@"
+
+/* Define to the full name and version of this package. */
+#define PACKAGE_STRING "@PACKAGE_STRING@"
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
+
+/* Define to the home page for this package. */
+#define PACKAGE_URL "@PACKAGE_URL@"
+
+/* Define to allow calculator expressions containing multi-digit (instead of
+   single-digit) integer literals. */
+#cmakedefine MOAR_DIGITS 1
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#cmakedefine HAVE_UNISTD_H 1
+
+/* Define to 1 if you have the <experimental/string_view> header file. */
+#cmakedefine HAVE_EXPERIMENTAL_STRING_VIEW 1
+
+/* Define to 1 if you have the std::isblank() function. */
+#cmakedefine HAVE_STD_ISBLANK 1
+
+/* Define to 1 if you have the C library numeric conversion functions. */
+#cmakedefine HAVE_NUMERIC_CONVERSIONS 1
+
+/* Define to 1 if you have the C library numeric conversion functions
+   imported into the 'std' namespace. */
+#cmakedefine HAVE_STD_NUMERIC_CONVERSIONS 1
+
+/* Define to 1 if you have the std::string numeric conversion functions. */
+#cmakedefine HAVE_STD_STRING_NUMERIC_CONVERSIONS 1
+
+#endif // CALC_CONFIG_HPP
