@@ -26,10 +26,19 @@ namespace calc {
 
 	template <typename CharT>
 	inline bool symbol_traits<CharT>::is_newline_start(CharT c) const {
+		return this->is_line_feed(c) || this->is_carriage_return(c);
+	}
+
+	template <typename CharT>
+	inline bool symbol_traits<CharT>::is_line_feed(CharT c) const {
 		const std::ctype<CharT>& ctype_facet = std::use_facet<std::ctype<CharT> >(this->_locale);
-		const CharT lf = ctype_facet.widen('\n');
-		const CharT cr = ctype_facet.widen('\r');
-		return char_traits_type::eq(c, lf) || char_traits_type::eq(c, cr);
+		return char_traits_type::eq(c, ctype_facet.widen('\n'));
+	}
+
+	template <typename CharT>
+	inline bool symbol_traits<CharT>::is_carriage_return(CharT c) const {
+		const std::ctype<CharT>& ctype_facet = std::use_facet<std::ctype<CharT> >(this->_locale);
+		return char_traits_type::eq(c, ctype_facet.widen('\r'));
 	}
 
 	template <typename CharT>

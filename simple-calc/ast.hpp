@@ -36,7 +36,7 @@ namespace calc {
 	class expr {
 	public:
 		virtual ~expr() = 0;
-		virtual std::intmax_t eval() const = 0;
+		virtual std::intmax_t value() const = 0;
 	};
 
 	/**
@@ -45,6 +45,7 @@ namespace calc {
 	class unary_expr : public expr {
 	public:
 		explicit unary_expr(const expr* operand1);
+		explicit unary_expr(std::unique_ptr<const expr>&& operand1);
 		virtual ~unary_expr() = 0;
 
 		const expr* operand() const noexcept;
@@ -59,6 +60,8 @@ namespace calc {
 	class binary_expr : public expr {
 	public:
 		binary_expr(const expr* operand1, const expr* operand2);
+		binary_expr(std::unique_ptr<const expr>&& operand1,
+		            std::unique_ptr<const expr>&& operand2);
 		virtual ~binary_expr() = 0;
 
 		const expr* left_operand() const noexcept;
@@ -75,7 +78,7 @@ namespace calc {
 	class addition_expr : public binary_expr {
 	public:
 		using binary_expr::binary_expr;
-		std::intmax_t eval() const;
+		std::intmax_t value() const;
 	};
 
 	/**
@@ -84,7 +87,7 @@ namespace calc {
 	class subtraction_expr : public binary_expr {
 	public:
 		using binary_expr::binary_expr;
-		std::intmax_t eval() const;
+		std::intmax_t value() const;
 	};
 
 	/**
@@ -93,7 +96,7 @@ namespace calc {
 	class multiplication_expr : public binary_expr {
 	public:
 		using binary_expr::binary_expr;
-		std::intmax_t eval() const;
+		std::intmax_t value() const;
 	};
 
 	/**
@@ -102,7 +105,7 @@ namespace calc {
 	class division_expr : public binary_expr {
 	public:
 		using binary_expr::binary_expr;
-		std::intmax_t eval() const;
+		std::intmax_t value() const;
 	};
 
 	/**
@@ -111,7 +114,7 @@ namespace calc {
 	class modulus_expr : public binary_expr {
 	public:
 		using binary_expr::binary_expr;
-		std::intmax_t eval() const;
+		std::intmax_t value() const;
 	};
 
 #if !MOAR_DIGITS
@@ -124,10 +127,8 @@ namespace calc {
 
 		digit& operator=(int v);
 
-		int value() const noexcept;
-		operator int() const noexcept;
-
-		std::intmax_t eval() const noexcept;
+		std::intmax_t value() const noexcept;
+		operator std::intmax_t() const noexcept;
 
 	private:
 		int _value;
@@ -163,8 +164,6 @@ namespace calc {
 
 		std::intmax_t value() const noexcept;
 		operator std::intmax_t() const noexcept;
-
-		std::intmax_t eval() const noexcept;
 
 	private:
 		std::intmax_t _value;

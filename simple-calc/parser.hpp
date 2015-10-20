@@ -12,7 +12,9 @@
 
 #include "config.hpp"
 
+#include <iostream>
 #include <cassert>
+#include <memory>
 
 #include "lexer.hpp"
 #include "parse_error.hpp"
@@ -29,11 +31,11 @@ namespace calc {
 	public:
 		typedef CharT char_type;
 		typedef Traits traits_type;
-		typedef typename Traits::char_traits_type char_traits_type;
 		typedef typename Traits::string_type string_type;
 		typedef typename Traits::string_view_type string_view_type;
 		typedef typename Traits::streambuf_type streambuf_type;
 		typedef typename Traits::istream_type istream_type;
+		typedef typename Traits::locale_type locale_type;
 		typedef basic_script_position<CharT, Traits> position_type;
 		typedef basic_script_extent<CharT, Traits> extent_type;
 		typedef basic_token<CharT, Traits> token_type;
@@ -45,8 +47,7 @@ namespace calc {
 		 * @param sb	Pointer to a stream buffer.
 		 */
 		explicit basic_parser(streambuf_type* sb) :
-			_lexer(sb), _tokens(_lexer.lex()), _next(_tokens.begin()),
-			_errors()
+			_lexer(sb), _expr_start_offset(0), _tokens(), _errors()
 		{}
 
 		/**
@@ -54,8 +55,7 @@ namespace calc {
 		 * @param in	An input stream.
 		 */
 		explicit basic_parser(const istream_type& in) :
-			_lexer(in), _tokens(_lexer.lex()), _next(_tokens.begin()),
-			_errors()
+			basic_parser(in.rdbuf())
 		{}
 
 		/**
@@ -64,12 +64,31 @@ namespace calc {
 		 * @return	An abstract syntax tree that represents the parsed
 		 * 			expression.
 		 */
-		const expr* next_expr();
+		std::unique_ptr<const expr> next_expr();
+
+		/**
+		 * Returns the current locale associated with the parser.
+		 * @return	The current locale associated with the parser.
+		 */
+		locale_type getloc() const {
+			return this->lexer().getloc();
+		}
+
+		/**
+		 * Replaces the current locale with a copy of @p loc.
+		 * @param loc	The locale that will replace the current locale.
+		 * @return		The locale before the call to this function.
+		 */
+		locale_type imbue(const locale_type& loc) {
+			return this->lexer().imbue(loc);
+		}
 
 	private:
+		typedef basic_script_position_helper<CharT, Traits> position_helper_type;
+
 		lexer_type _lexer;
+		std::size_t _expr_start_offset;
 		std::list<token_type> _tokens;
-		typename std::list<token_type>::iterator _next;
 		std::list<error_type> _errors;
 
 		lexer_type& lexer() noexcept {
@@ -78,6 +97,31 @@ namespace calc {
 
 		const lexer_type& lexer() const noexcept {
 			return this->_lexer;
+		}
+
+		const position_helper_type& position_helper() const noexcept {
+			return this->lexer().position_helper();
+		}
+
+		const string_type& script() const noexcept {
+			return this->position_helper().script();
+		}
+
+		std::size_t offset() const noexcept {
+			return this->peek().extent().start_offset();
+		}
+
+		std::size_t expr_start_offset() const noexcept {
+			return this->_expr_start_offset;
+		}
+
+		void expr_start_offset(std::size_t offset) noexcept {
+			assert(offset <= this->offset());
+			this->_expr_start_offset = offset;
+		}
+
+		extent_type extent() const noexcept {
+			return extent_type(this->position_helper(), this->expr_start_offset(), this->offset());
 		}
 
 		std::list<token_type>& tokens() noexcept {
@@ -97,39 +141,50 @@ namespace calc {
 		}
 
 		bool eof() const {
-			return this->_next == --(this->_tokens.end());
+			assert(!this->tokens().empty());
+			return this->tokens().back().kind() == token_base::kind::eof;
 		}
 
 		token_type& get() {
 			assert(!this->eof());
-			return *(this->_next++);
+			token_type& next_token = this->tokens().back();
+			this->tokens().push_back(this->lexer().next_token());
+			return next_token;
 		}
 
-		token_type& peek() const {
-			return *(this->_next);
+		token_type& peek() {
+			assert(!this->tokens().empty());
+			return this->tokens().back();
+		}
+
+		const token_type& peek() const {
+			assert(!this->tokens().empty());
+			return this->tokens().back();
 		}
 
 		void unget() {
-			assert(this->_next != this->_tokens.begin());
-			this->_next--;
+			assert(!this->tokens().empty());
+			string_view_type prev_token_text = this->tokens().back().text();
+			for (auto itr = prev_token_text.rbegin(); itr != prev_token_text.rend(); ++itr)
+				this->lexer().putback(*itr);
+			this->tokens().pop_back();
+			this->lexer().rewind_blanks();
 		}
 
 		void ignore() {
 			assert(!this->eof());
-			this->_next++;
+			this->tokens().push_back(this->lexer().next_token());
 		}
 
 		void skip_newlines();
 
-		const expr* parse_expr();
-		const expr* parse_factor();
-		const expr* parse_term();
+		std::unique_ptr<const expr> parse_expr();
+		std::unique_ptr<const expr> parse_factor();
+		std::unique_ptr<const expr> parse_term();
 
 		void report_error(const error_type& error);
 		void report_error(error_id code, const extent_type& extent, const char* message);
 		void report_error(error_id code, const extent_type& extent, const std::string& message);
-		void report_unexpected_token(token_type& token);
-		void report_unknown_token(token_type& token);
 	};
 } // namespace calc
 

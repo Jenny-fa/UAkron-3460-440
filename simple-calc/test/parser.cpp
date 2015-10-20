@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <sstream>
 
 #include "cli.hpp"
 #include "parser.hpp"
@@ -17,43 +16,44 @@ int main(int argc, char* argv[]) {
 		return 2;
 	}
 
-	std::stringbuf buffer;
+	std::ifstream in;
+	std::streambuf* buffer;
 
 	if (argc == 2) {
-		std::ifstream in_file(argv[1]);
-		if (!in_file) {
+		in.open(argv[1]);
+		if (!in) {
 			calc::report_error("Could not open %s.", argv[1]);
 			return 1;
 		}
-		in_file >> &buffer;
+		buffer = in.rdbuf();
 	}
 	else {
-		std::cin >> &buffer;
+		buffer = std::cin.rdbuf();
 	}
 
 	try {
-		calc::parser parser(&buffer);
+		calc::parser parser(buffer);
 
 		while (true) {
-			const calc::expr* expr = parser.next_expr();
-			if (!expr)
-				break;
+			if (calc::is_interactive() && buffer == std::cin.rdbuf())
+				calc::show_prompt();
 			try {
-				std::cout << expr->eval() << std::endl;
+				std::unique_ptr<const calc::expr> expr = parser.next_expr();
+				if (!expr)
+					break;
+				std::cout << expr->value() << std::endl;
+			}
+			catch (const calc::parse_error& exception) {
+				calc::report_error(exception);
 			}
 			catch (const std::domain_error& exception) {
 				calc::report_error("Division by zero.");
 			}
-			delete expr;
 		}
 	}
 	catch (const std::ios_base::failure& exception) {
 		calc::report_error("An unexpected I/O error occurred.\n\twhat: %s",
 			exception.what());
-		return 1;
-	}
-	catch (const calc::parse_error& exception) {
-		calc::report_error(exception);
 		return 1;
 	}
 

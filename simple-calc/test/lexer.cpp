@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <sstream>
 
 #include "cli.hpp"
 #include "lexer.hpp"
@@ -17,26 +16,27 @@ int main(int argc, char* argv[]) {
 		return 2;
 	}
 
-	std::stringbuf buffer;
+	std::ifstream in;
+	std::streambuf* buffer;
 
 	if (argc == 2) {
-		std::ifstream in_file(argv[1]);
-		if (!in_file) {
+		in.open(argv[1]);
+		if (!in) {
 			calc::report_error("Could not open %s.", argv[1]);
 			return 1;
 		}
-		in_file >> &buffer;
+		buffer = in.rdbuf();
 	}
 	else {
-		std::cin >> &buffer;
+		buffer = std::cin.rdbuf();
 	}
 
-	calc::lexer lexer(&buffer);
+	calc::lexer lexer(buffer);
 	std::size_t token_count = 0;
 
 	try {
 		while (true) {
-			const calc::lexer::token_type token = lexer.next_token();
+			calc::lexer::token_type token = lexer.next_token();
 
 			std::cout << "Token " << ++token_count << ":\n";
 			std::cout << "\textent: " << token.extent() << '\n';

@@ -48,11 +48,15 @@ namespace calc {
 		}
 
 		locale_type imbue(const locale_type& loc) {
+			locale_type temp(this->_locale);
 			this->_locale = loc;
+			return temp;
 		}
 
 		bool is_blank(CharT c) const;
 		bool is_newline_start(CharT c) const;
+		bool is_line_feed(CharT c) const;
+		bool is_carriage_return(CharT c) const;
 		bool is_digit(CharT c) const;
 		bool is_addition_operator(CharT c) const;
 		bool is_subtraction_operator(CharT c) const;
@@ -86,7 +90,9 @@ namespace calc {
 		}
 
 		locale_type imbue(const locale_type& loc) {
+			locale_type temp(this->_locale);
 			this->_locale = loc;
+			return temp;
 		}
 
 		bool is_blank(char c) const {
@@ -98,7 +104,15 @@ namespace calc {
 		}
 
 		bool is_newline_start(char c) const {
-			return char_traits_type::eq(c, '\n') || char_traits_type::eq(c, '\r');
+			return this->is_line_feed(c) || this->is_carriage_return(c);
+		}
+
+		bool is_line_feed(char c) const {
+			return char_traits_type::eq(c, '\n');
+		}
+
+		bool is_carriage_return(char c) const {
+			return char_traits_type::eq(c, '\r');
 		}
 
 		bool is_digit(char c) const {
@@ -157,7 +171,9 @@ namespace calc {
 		}
 
 		locale_type imbue(const locale_type& loc) {
+			locale_type temp(this->_locale);
 			this->_locale = loc;
+			return temp;
 		}
 
 		bool is_blank(wchar_t c) const {
@@ -169,7 +185,15 @@ namespace calc {
 		}
 
 		bool is_newline_start(wchar_t c) const {
-			return char_traits_type::eq(c, L'\n') || char_traits_type::eq(c, L'\r');
+			return this->is_line_feed(c) || this->is_carriage_return(c);
+		}
+
+		bool is_line_feed(wchar_t c) const {
+			return char_traits_type::eq(c, L'\n');
+		}
+
+		bool is_carriage_return(wchar_t c) const {
+			return char_traits_type::eq(c, L'\r');
 		}
 
 		bool is_digit(wchar_t c) const {

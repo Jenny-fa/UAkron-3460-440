@@ -21,17 +21,14 @@ namespace calc {
 		this->skip_blanks();
 
 		// set token offset to current offset
-		this->token_offset(this->offset());
+		this->token_start_offset(this->offset());
 
 		if (this->eof())
 			return this->lex_eof();
 
-		const CharT lf = this->_in.widen('\n');
-		const CharT cr = this->_in.widen('\r');
-
 		const CharT c = char_traits_type::to_char_type(this->peek());
 
-		if (char_traits_type::eq(c, lf) || char_traits_type::eq(c, cr))
+		if (this->traits().is_newline_start(c))
 			return this->lex_newline();
 #if !MOAR_DIGITS
 		if (this->traits().is_digit(c))
@@ -61,7 +58,7 @@ namespace calc {
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::int_type
 	basic_lexer<CharT, Traits>::get() {
-		// assert(this->_in.good());
+		assert(this->_in.good());
 		const typename char_traits_type::int_type c = this->_in.get();
 		if (char_traits_type::not_eof(c))
 			this->script().push_back(char_traits_type::to_char_type(c));
@@ -73,13 +70,13 @@ namespace calc {
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::int_type
 	basic_lexer<CharT, Traits>::peek() {
-		// assert(!this->_in.fail());
+		assert(!this->_in.fail());
 		return this->_in.peek();
 	}
 
 	template <typename CharT, class Traits>
 	void basic_lexer<CharT, Traits>::unget() {
-		// assert(!this->_in.fail());
+		assert(!this->_in.fail());
 		this->_in.unget();
 		if (!this->_in.bad())
 			this->script().pop_back();
@@ -87,7 +84,7 @@ namespace calc {
 
 	template <typename CharT, class Traits>
 	void basic_lexer<CharT, Traits>::ignore() {
-		// assert(this->_in.good());
+		assert(this->_in.good());
 		const typename char_traits_type::int_type c = this->_in.peek();
 		if (char_traits_type::not_eof(c))
 			this->script().push_back(char_traits_type::to_char_type(c));
@@ -98,7 +95,7 @@ namespace calc {
 
 	template <typename CharT, class Traits>
 	void basic_lexer<CharT, Traits>::putback(CharT c) {
-		// assert(!this->_in.fail());
+		assert(!this->_in.fail());
 		this->_in.putback(c);
 		if (!this->_in.bad())
 			this->script().pop_back();
@@ -115,16 +112,23 @@ namespace calc {
 	}
 
 	template <typename CharT, class Traits>
+	void basic_lexer<CharT, Traits>::rewind_blanks() {
+		while (!this->script().empty()) {
+			const CharT c = this->script().back();
+			if (!this->traits().is_blank(c))
+				break;
+			this->putback(c);
+		}
+	}
+
+	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_unknown() {
 		assert(!this->eof());
 
-		const CharT lf = this->_in.widen('\n');
-		const CharT cr = this->_in.widen('\r');
-
 		do {
 			const CharT c = char_traits_type::to_char_type(this->peek());
-			if (this->traits().is_blank(c) || char_traits_type::eq(c, lf) || char_traits_type::eq(c, cr))
+			if (this->traits().is_blank(c) || this->traits().is_newline_start(c))
 				break;
 			this->ignore();
 		} while (!this->eof());
@@ -142,21 +146,18 @@ namespace calc {
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_newline() {
-		assert(!this->eof());
-
-		const CharT lf = this->_in.widen('\n');
-		const CharT cr = this->_in.widen('\r');
+		assert(!this->eof() && this->traits().is_newline_start(char_traits_type::to_char_type(this->peek())));
 
 		CharT c = char_traits_type::to_char_type(this->get());
 
-		if (char_traits_type::eq(c, lf)) {
-			this->_position_helper.add_line_start(this->offset());
+		if (this->traits().is_line_feed(c)) {
+			this->position_helper().add_line_start(this->offset());
 		}
-		else if (char_traits_type::eq(c, cr)) {
+		else if (this->traits().is_carriage_return(c)) {
 			if (!this->eof()) {
 				c = char_traits_type::to_char_type(this->get());
-				if (char_traits_type::eq(c, lf))
-					this->_position_helper.add_line_start(this->offset());
+				if (this->traits().is_line_feed(c))
+					this->position_helper().add_line_start(this->offset());
 				else
 					this->unget();
 			}
@@ -178,10 +179,12 @@ namespace calc {
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_integer() {
 		assert(!this->eof() && this->traits().is_digit(char_traits_type::to_char_type(this->peek())));
-		CharT c;
 		do {
-			c = char_traits_type::to_char_type(this->get());
-		} while (!this->eof() && this->traits().is_digit(c));
+			const CharT c = char_traits_type::to_char_type(this->peek());
+			if (!this->traits().is_digit(c))
+				break;
+			this->ignore();
+		} while (!this->eof());
 		return token_type(this->extent(), token_type::kind::integer);
 	}
 #endif

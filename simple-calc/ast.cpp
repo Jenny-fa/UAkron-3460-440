@@ -15,9 +15,13 @@ namespace calc {
 	expr::~expr() {}
 
 	unary_expr::unary_expr(const expr* operand1) :
-		_operand(operand1)
+		unary_expr(std::unique_ptr<const expr>(operand1))
+	{}
+
+	unary_expr::unary_expr(std::unique_ptr<const expr>&& operand1) :
+		_operand(std::move(operand1))
 	{
-		if (!operand1)
+		if (!this->_operand)
 			throw std::invalid_argument("calc::unary_expr::unary_expr");
 	}
 
@@ -28,11 +32,15 @@ namespace calc {
 	}
 
 	binary_expr::binary_expr(const expr* operand1, const expr* operand2) :
-		_left_operand(operand1),
-		_right_operand(operand2)
+		binary_expr(std::unique_ptr<const expr>(operand1), std::unique_ptr<const expr>(operand2))
+	{}
+
+	binary_expr::binary_expr(std::unique_ptr<const expr>&& operand1,
+	                         std::unique_ptr<const expr>&& operand2) :
+		_left_operand(std::move(operand1)), _right_operand(std::move(operand2))
 	{
-		if (!operand1 || !operand2)
-			throw std::invalid_argument("calc::unary_expr::unary_expr");
+		if (!this->_left_operand || !this->_right_operand)
+			throw std::invalid_argument("calc::binary_expr::binary_expr");
 	}
 
 	binary_expr::~binary_expr() {}
@@ -45,30 +53,30 @@ namespace calc {
 		return this->_right_operand.get();
 	}
 
-	std::intmax_t addition_expr::eval() const {
-		return this->left_operand()->eval() + this->right_operand()->eval();
+	std::intmax_t addition_expr::value() const {
+		return this->left_operand()->value() + this->right_operand()->value();
 	}
 
-	std::intmax_t subtraction_expr::eval() const {
-		return this->left_operand()->eval() - this->right_operand()->eval();
+	std::intmax_t subtraction_expr::value() const {
+		return this->left_operand()->value() - this->right_operand()->value();
 	}
 
-	std::intmax_t multiplication_expr::eval() const {
-		return this->left_operand()->eval() * this->right_operand()->eval();
+	std::intmax_t multiplication_expr::value() const {
+		return this->left_operand()->value() * this->right_operand()->value();
 	}
 
-	std::intmax_t division_expr::eval() const {
-		const std::intmax_t rhs_value = this->right_operand()->eval();
+	std::intmax_t division_expr::value() const {
+		const std::intmax_t rhs_value = this->right_operand()->value();
 		if (rhs_value == 0)
-			throw std::domain_error("calc::division_expr::eval");
-		return this->left_operand()->eval() / rhs_value;
+			throw std::domain_error("calc::division_expr::value");
+		return this->left_operand()->value() / rhs_value;
 	}
 
-	std::intmax_t modulus_expr::eval() const {
-		const std::intmax_t rhs_value = this->right_operand()->eval();
+	std::intmax_t modulus_expr::value() const {
+		const std::intmax_t rhs_value = this->right_operand()->value();
 		if (rhs_value == 0)
-			throw std::domain_error("calc::modulus_expr::eval");
-		return this->left_operand()->eval() % rhs_value;
+			throw std::domain_error("calc::modulus_expr::value");
+		return this->left_operand()->value() % rhs_value;
 	}
 
 #if !MOAR_DIGITS
@@ -84,16 +92,12 @@ namespace calc {
 		return *this;
 	}
 
-	int digit::value() const noexcept {
+	std::intmax_t digit::value() const noexcept {
 		return this->_value;
 	}
 
-	digit::operator int() const noexcept {
+	digit::operator std::intmax_t() const noexcept {
 		return this->_value;
-	}
-
-	std::intmax_t digit::eval() const noexcept {
-		return this->value();
 	}
 #else
 	integer::integer(std::intmax_t v) noexcept : _value(v) {}
@@ -145,10 +149,6 @@ namespace calc {
 
 	integer::operator std::intmax_t() const noexcept {
 		return this->_value;
-	}
-
-	std::intmax_t integer::eval() const noexcept {
-		return this->value();
 	}
 #endif
 } // namespace calc

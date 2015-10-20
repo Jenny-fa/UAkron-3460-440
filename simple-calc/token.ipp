@@ -13,7 +13,7 @@
 
 namespace calc {
 	template <typename CharT, class Traits>
-	constexpr token_base::flags basic_token<CharT, Traits>::default_token_flags[11];
+	constexpr token_base::flags basic_token<CharT, Traits>::_default_token_flags[11];
 
 	// Inhibit implicit instantiations for required instantiations, which are
 	// defined via explicit instantiations elsewhere.

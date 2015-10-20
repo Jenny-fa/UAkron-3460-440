@@ -1,52 +1,30 @@
-include(CMakeParseArguments)
+# Link all subsequently added targets against libcalc.
+link_libraries(libcalc)
 
-# Set variables.
-set(TEST_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(TEST_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+# Add test executables.
+add_executable(test_lexer lexer.cpp)
+add_executable(test_parser parser.cpp)
+add_dependencies(check test_lexer test_parser)
 
-# Define macros and functions.
-macro(ADD_TEST_EXECUTABLE BASE_NAME)
-	if(TEST_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-		message(FATAL_ERROR "ADD_TEST_EXECUTABLE() must be called from a subdirectory of ${TEST_SOURCE_DIR}.")
-	endif()
+# Add tests.
+foreach(i RANGE 1 4)
+	add_test(
+		NAME lexer_${i}
+		COMMAND test_lexer "${CMAKE_CURRENT_SOURCE_DIR}/input_${i}.txt"
+		WORKING_DIRECTORY $<TARGET_LINKER_FILE_DIR:libcalc>
+	)
+	set_tests_properties(lexer_${i} PROPERTIES
+		REQUIRED_FILES ${CMAKE_CURRENT_SOURCE_DIR}/input_${i}.txt)
+endforeach()
 
-	set(options WIN32 MACOSX_BUNDLE)
-	set(oneValueArgs)
-	set(multiValueArgs)
-
-	cmake_parse_arguments(_ADD_TEST_EXECUTABLE "${options}" "${oneValueArgs}"
-		"${multiValueArgs}" ${ARGN})
-
-	set(_ADD_TEST_EXECUTABLE_ADD_WIN32)
-	set(_ADD_TEST_EXECUTABLE_ADD_MACOSX_BUNDLE)
-
-	if(_ADD_TEST_EXECUTABLE_WIN32)
-		set(_ADD_TEST_EXECUTABLE_ADD_WIN32 WIN32)
-	endif()
-	if(_ADD_TEST_EXECUTABLE_MACOSX_BUNDLE)
-		set(_ADD_TEST_EXECUTABLE_ADD_MACOSX_BUNDLE MACOSX_BUNDLE)
-	endif()
-
-	if(${BASE_NAME} STREQUAL "")
-		message(FATAL_ERROR "ADD_TEST_EXECUTABLE() must be given non-empty BASE_NAME.")
-	endif()
-
-    set(_ADD_TEST_EXECUTABLE_SOURCES ${_ADD_TEST_EXECUTABLE_UNPARSED_ARGUMENTS})
-
-	if(NOT DEFINED TEST_SUITE)
-		file(RELATIVE_PATH TEST_SUITE ${TEST_SOURCE_DIR}
-			${CMAKE_CURRENT_SOURCE_DIR})
-		string(MAKE_C_IDENTIFIER ${TEST_SUITE} TEST_SUITE)
-	endif()
-
-	set(_ADD_TEST_EXECUTABLE_NAME test_${TEST_SUITE}_${BASE_NAME})
-
-	add_executable(${_ADD_TEST_EXECUTABLE_NAME}
-		${_ADD_TEST_EXECUTABLE_ADD_WIN32}
-		${_ADD_TEST_EXECUTABLE_ADD_MACOSX_BUNDLE}
-		${_ADD_TEST_EXECUTABLE_SOURCES})
-	add_dependencies(check ${_ADD_TEST_EXECUTABLE_NAME})
-endmacro()
-
-# Add subdirectories.
-add_subdirectory(libcalc)
+foreach(i RANGE 1 4)
+	add_test(
+		NAME parser_${i}
+		COMMAND test_parser "${CMAKE_CURRENT_SOURCE_DIR}/input_${i}.txt"
+		WORKING_DIRECTORY $<TARGET_LINKER_FILE_DIR:libcalc>
+	)
+	set_tests_properties(parser_${i} PROPERTIES
+		REQUIRED_FILES ${CMAKE_CURRENT_SOURCE_DIR}/input_${i}.txt)
+endforeach()
+# set_tests_properties(parser_2 PROPERTIES WILL_FAIL TRUE)
+# set_tests_properties(parser_4 PROPERTIES WILL_FAIL TRUE)

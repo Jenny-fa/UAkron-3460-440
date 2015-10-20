@@ -17,10 +17,13 @@
 
 namespace calc {
 	template <typename CharT, class Traits>
-	const expr* basic_parser<CharT, Traits>::next_expr() {
+	std::unique_ptr<const expr> basic_parser<CharT, Traits>::next_expr() {
+		// lazily extract first token from input stream
+		if (this->tokens().empty())
+			this->tokens().push_back(this->lexer().next_token());
 		this->skip_newlines();
 		if (this->eof())
-			return nullptr;
+			return std::unique_ptr<const expr>();
 		return this->parse_expr();
 	}
 
@@ -35,80 +38,77 @@ namespace calc {
 	}
 
 	template <typename CharT, class Traits>
-	const expr* basic_parser<CharT, Traits>::parse_expr() {
-		assert(!this->eof());
-
-		const expr* result = this->parse_factor();
+	std::unique_ptr<const expr> basic_parser<CharT, Traits>::parse_expr() {
+		std::unique_ptr<const expr> result = this->parse_factor();
 
 		while (!this->eof()) {
-			const expr* rest = nullptr;
-			token_type& token = this->get();
+			std::unique_ptr<const expr> rest = nullptr;
+			token_type& token = this->peek();
 
 			switch (token.kind()) {
 				case token_base::kind::addition_operator:
+					this->ignore();
 					rest = this->parse_factor();
-					result = new addition_expr(result, rest);
+					result = std::make_unique<addition_expr>(std::move(result), std::move(rest));
 					break;
 				case token_base::kind::subtraction_operator:
+					this->ignore();
 					rest = this->parse_factor();
-					result = new subtraction_expr(result, rest);
+					result = std::make_unique<subtraction_expr>(std::move(result), std::move(rest));
 					break;
 				default:
-					this->unget();
-					goto exit1;
+					goto exit;
 			}
 		}
-exit1:
-		return result;
+exit:
+		return std::move(result);
 	}
 
 	template <typename CharT, class Traits>
-	const expr* basic_parser<CharT, Traits>::parse_factor() {
-		assert(!this->eof());
-
-		const expr* result = this->parse_term();
+	std::unique_ptr<const expr> basic_parser<CharT, Traits>::parse_factor() {
+		std::unique_ptr<const expr> result = this->parse_term();
 
 		while (!this->eof()) {
-			const expr* rest = nullptr;
-			token_type& token = this->get();
+			std::unique_ptr<const expr> rest = nullptr;
+			token_type& token = this->peek();
 
 			switch (token.kind()) {
 				case token_base::kind::multiplication_operator:
+					this->ignore();
 					rest = this->parse_term();
-					result = new multiplication_expr(result, rest);
+					result = std::make_unique<multiplication_expr>(std::move(result), std::move(rest));
 					break;
 				case token_base::kind::division_operator:
+					this->ignore();
 					rest = this->parse_term();
-					result = new division_expr(result, rest);
+					result = std::make_unique<division_expr>(std::move(result), std::move(rest));
 					break;
 				case token_base::kind::modulus_operator:
+					this->ignore();
 					rest = this->parse_term();
-					result = new modulus_expr(result, rest);
+					result = std::make_unique<modulus_expr>(std::move(result), std::move(rest));
 					break;
 				default:
-					this->unget();
-					goto exit2;
+					goto exit;
 			}
 		}
-exit2:
-		return result;
+exit:
+		return std::move(result);
 	}
 
 	template <typename CharT, class Traits>
-	const expr* basic_parser<CharT, Traits>::parse_term() {
-		assert(!this->eof());
-
-		const expr* result = nullptr;
+	std::unique_ptr<const expr> basic_parser<CharT, Traits>::parse_term() {
+		std::unique_ptr<const expr> result = nullptr;
 		token_type& token = this->get();
 
 		switch (token.kind()) {
 #if !MOAR_DIGITS
 			case token_base::kind::digit:
-				result = new digit(stoi(token.text().to_string()));
+				result = std::make_unique<digit>(stoi(token.text().to_string()));
 				break;
 #else
 			case token_base::kind::integer:
-				result = new integer(stoll(token.text().to_string()));
+				result = std::make_unique<integer>(stoll(token.text().to_string()));
 				break;
 #endif
 			case token_base::kind::left_parenthesis:
@@ -118,30 +118,39 @@ exit2:
 				else {
 					token.flags(token_base::flags::has_error);
 					this->report_error(error_id::missing_closing_parenthesis,
-						extent_type(this->lexer().position_helper(), token.extent().start_offset(), this->peek().extent().end_offset()),
+						extent_type(this->position_helper(), token.extent().start_offset(), this->peek().extent().end_offset()),
 						"Nested expression is missing closing parenthesis.");
 				}
 				break;
 			case token_base::kind::unknown:
-				this->report_unknown_token(token);
+				token.flags(token_base::flags::has_error);
+				this->report_error(error_id::unknown_token, token.extent(), "Unrecognized token.");
+				break;
+			case token_base::kind::eof:
+				token.flags(token_base::flags::has_error);
+				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected end of file.");
+				break;
+			case token_base::kind::newline:
+				token.flags(token_base::flags::has_error);
+				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected end of line.");
 				break;
 			default:
-				this->report_unexpected_token(token);
+				token.flags(token_base::flags::has_error);
+				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected token.");
 				break;
 		}
 
-		return result;
+		return std::move(result);
 	}
 
 	template <typename CharT, class Traits>
 	void
 	basic_parser<CharT, Traits>::report_error(const typename basic_parser<CharT, Traits>::error_type& error) {
-		auto is_equal = [&error] (const error_type& i) {
+		auto error_equal = [&error] (const error_type& i) {
 			return i.code() == error.code() && i.extent() == error.extent();
 		};
-		if (std::none_of(this->errors().cbegin(), this->errors().cend(), is_equal))
+		if (std::none_of(this->errors().cbegin(), this->errors().cend(), error_equal))
 			this->errors().push_back(error);
-		// TODO: Fix potential memory leaks!
 		throw error;
 	}
 
@@ -161,20 +170,6 @@ exit2:
 	  const std::string& message)
 	{
 		this->report_error(error_type(code, extent, message));
-	}
-
-	template <typename CharT, class Traits>
-	void
-	basic_parser<CharT, Traits>::report_unexpected_token(typename basic_parser<CharT, Traits>::token_type& token) {
-		token.flags(token_base::flags::has_error);
-		this->report_error(error_id::unexpected_token, token.extent(), "Unexpected token.");
-	}
-
-	template <typename CharT, class Traits>
-	void
-	basic_parser<CharT, Traits>::report_unknown_token(typename basic_parser<CharT, Traits>::token_type& token) {
-		token.flags(token_base::flags::has_error);
-		this->report_error(error_id::unknown_token, token.extent(), "Unrecognized token.");
 	}
 
 	// Inhibit implicit instantiations for required instantiations, which are

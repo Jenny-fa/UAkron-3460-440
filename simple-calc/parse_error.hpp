@@ -28,9 +28,8 @@ namespace calc {
 
 	/// Identifies the kind of parsing error.
 	enum error_id {
-		unexpected_eof,
-		unexpected_token,
 		unknown_token,
+		unexpected_token,
 		missing_closing_parenthesis
 	};
 
@@ -47,14 +46,14 @@ namespace calc {
 		typedef basic_script_extent<CharT, Traits> extent_type;
 
 		basic_parse_error(error_id code,
-			              const extent_type& extent,
-			              const char* what) :
+		                  const extent_type& extent,
+		                  const char* what) :
 			std::runtime_error(what), _code(code), _extent(extent)
 		{}
 
 		basic_parse_error(error_id code,
-			              const extent_type& extent,
-			              const std::string& what) :
+		                  const extent_type& extent,
+		                  const std::string& what) :
 			std::runtime_error(what), _code(code), _extent(extent)
 		{}
 
@@ -62,7 +61,7 @@ namespace calc {
 			return this->_code;
 		}
 
-		constexpr const extent_type& extent() const noexcept {
+		constexpr extent_type extent() const noexcept {
 			return this->_extent;
 		}
 

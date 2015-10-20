@@ -105,7 +105,7 @@ namespace calc {
 		return script_view.substr(this->start_offset(), this->end_offset() - this->start_offset());
 	}
 
-	template <typename CharT, class SymbolTraits, class CharTraits = typename SymbolTraits::char_traits_type>
+	template <typename CharT, class SymbolTraits, class CharTraits>
 	std::basic_ostream<CharT, CharTraits>&
 	operator<<(std::basic_ostream<CharT, CharTraits>& out,
 	           const basic_script_position<CharT, SymbolTraits>& position)
@@ -118,7 +118,7 @@ namespace calc {
 		           << position.column_number() << right_brace;
 	}
 
-	template <typename CharT, class SymbolTraits, class CharTraits = typename SymbolTraits::char_traits_type>
+	template <typename CharT, class SymbolTraits, class CharTraits>
 	std::basic_ostream<CharT, CharTraits>&
 	operator<<(std::basic_ostream<CharT, CharTraits>& out,
 	           const basic_script_extent<CharT, SymbolTraits>& extent)

@@ -63,7 +63,6 @@ namespace calc {
 			multiplication_precedence = 0 << 4,
 			addition_precedence = 1 << 4,
 			operator_precedence_mask = ((1 << 4) - 1) << 4
-			// nest_level?
 		};
 	};
 
@@ -85,7 +84,7 @@ namespace calc {
 		typedef basic_script_position<CharT, Traits> position_type;
 		typedef basic_script_extent<CharT, Traits> extent_type;
 
-		constexpr const extent_type& extent() const noexcept {
+		constexpr extent_type extent() const noexcept {
 			return this->_extent;
 		}
 
@@ -107,7 +106,7 @@ namespace calc {
 
 	private:
 		/// Maps token kind to default token flags.
-		static constexpr token_base::flags default_token_flags[11] = {
+		static constexpr token_base::flags _default_token_flags[11] = {
 			none,
 			none,
 			none,
@@ -145,7 +144,7 @@ namespace calc {
 		 */
 		constexpr basic_token(const extent_type& extent,
 			                  token_base::kind kind) noexcept :
-			basic_token(extent, kind, default_token_flags[kind])
+			basic_token(extent, kind, _default_token_flags[kind])
 		{}
 
 		/**

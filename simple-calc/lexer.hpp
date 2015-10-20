@@ -38,6 +38,7 @@ namespace calc {
 		typedef typename Traits::string_view_type string_view_type;
 		typedef typename Traits::streambuf_type streambuf_type;
 		typedef typename Traits::istream_type istream_type;
+		typedef typename Traits::locale_type locale_type;
 		typedef basic_script_position<CharT, Traits> position_type;
 		typedef basic_script_extent<CharT, Traits> extent_type;
 		typedef basic_token<CharT, Traits> token_type;
@@ -48,7 +49,7 @@ namespace calc {
 		 * @param sb	Pointer to a stream buffer.
 		 */
 		explicit basic_lexer(streambuf_type* sb) :
-			_traits(), _in(sb), _position_helper(), _token_offset(0)
+			_traits(), _in(sb), _position_helper(), _token_start_offset(0)
 		{
 			this->_in.exceptions(std::ios_base::failbit);
 		}
@@ -58,13 +59,12 @@ namespace calc {
 		 * @param in	An input stream.
 		 */
 		explicit basic_lexer(const istream_type& in) :
-			_traits(), _in(in.rdbuf()), _position_helper(), _token_offset(0)
+			basic_lexer(in.rdbuf())
 		{
 			// copy other input stream's state except for exception mask and
 			// unset failbit
 			this->_in.copyfmt(in);
 			this->_in.clear(in.rdstate() & ~std::ios_base::failbit);
-			this->_in.exceptions(std::ios_base::failbit);
 		}
 
 		/**
@@ -78,7 +78,7 @@ namespace calc {
 		std::list<token_type> lex() {
 			std::list<token_type> tokens;
 			while (true) {
-				const token_type token = this->next_token();
+				token_type token = this->next_token();
 				tokens.push_back(token);
 				if (token.kind() == token_base::kind::eof)
 					break;
@@ -98,8 +98,9 @@ namespace calc {
 		std::list<token_type> lex_line() {
 			std::list<token_type> tokens;
 			while (true) {
-				const token_type token = this->next_token();
-				if (token.kind() == token_base::kind::newline)
+				token_type token = this->next_token();
+				if (token.kind() == token_base::kind::newline
+				    || token.kind() == token_base::kind::eof)
 					break;
 				tokens.push_back(token);
 			}
@@ -112,6 +113,33 @@ namespace calc {
 		 */
 		token_type next_token();
 
+		/**
+		 * Returns the current locale associated with the lexer.
+		 * @return	The current locale associated with the lexer.
+		 */
+		locale_type getloc() const {
+			return this->traits().getloc();
+		}
+
+		/**
+		 * Replaces the current locale with a copy of @p loc.
+		 * @param loc	The locale that will replace the current locale.
+		 * @return		The locale before the call to this function.
+		 */
+		locale_type imbue(const locale_type& loc) {
+			return this->traits().imbue(loc);
+		}
+
+		/**
+		 * Returns true if the associated input stream has no errors and the
+		 * lexer is ready to extract tokens.
+		 * @return	@c true if the input stream has no errors, @c false
+		 * 			otherwise.
+		 */
+		explicit operator bool() const {
+			return static_cast<bool>(this->_in);
+		}
+
 	private:
 		typedef basic_script_position_helper<CharT, Traits> position_helper_type;
 
@@ -123,7 +151,7 @@ namespace calc {
 		position_helper_type _position_helper;
 		/// The currently scanned token's offset from the beginning of the
 		/// script.
-		std::size_t _token_offset;
+		std::size_t _token_start_offset;
 
 		Traits& traits() noexcept {
 			return this->_traits;
@@ -153,17 +181,17 @@ namespace calc {
 			return this->script().size();
 		}
 
-		std::size_t token_offset() const noexcept {
-			return this->_token_offset;
+		std::size_t token_start_offset() const noexcept {
+			return this->_token_start_offset;
 		}
 
-		void token_offset(std::size_t offset) noexcept {
+		void token_start_offset(std::size_t offset) noexcept {
 			assert(offset <= this->offset());
-			this->_token_offset = offset;
+			this->_token_start_offset = offset;
 		}
 
 		extent_type extent() const noexcept {
-			return extent_type(this->position_helper(), this->token_offset(), this->offset());
+			return extent_type(this->position_helper(), this->token_start_offset(), this->offset());
 		}
 
 		bool eof() const {
@@ -177,6 +205,7 @@ namespace calc {
 		void putback(CharT c);
 
 		void skip_blanks();
+		void rewind_blanks();
 
 		token_type lex_unknown();
 		token_type lex_eof();

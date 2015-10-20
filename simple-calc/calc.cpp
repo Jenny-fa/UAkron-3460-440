@@ -1,7 +1,6 @@
 #include "config.hpp"
 
 #include <iostream>
-#include <sstream>
 
 #include "cli.hpp"
 #include "parser.hpp"
@@ -16,32 +15,29 @@ int main(int argc, char* argv[]) {
 		return 2;
 	}
 
-	std::stringbuf buffer;
-	std::cin.get(buffer);
-
 	try {
-		calc::parser parser(&buffer);
+		calc::parser parser(std::cin);
 
 		while (true) {
-			const calc::expr* expr = parser.next_expr();
-			if (!expr)
-				break;
+			if (calc::is_interactive())
+				calc::show_prompt();
 			try {
-				std::cout << expr->eval() << std::endl;
+				std::unique_ptr<const calc::expr> expr = parser.next_expr();
+				if (!expr)
+					break;
+				std::cout << expr->value() << std::endl;
+			}
+			catch (const calc::parse_error& exception) {
+				calc::report_error(exception);
 			}
 			catch (const std::domain_error& exception) {
 				calc::report_error("Division by zero.");
 			}
-			delete expr;
 		}
 	}
 	catch (const std::ios_base::failure& exception) {
 		calc::report_error("An unexpected I/O error occurred.\n\twhat: %s",
 			exception.what());
-		return 1;
-	}
-	catch (const calc::parse_error& exception) {
-		calc::report_error(exception);
 		return 1;
 	}
 

@@ -9,11 +9,12 @@
 
 #include "cli.hpp"
 
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <cstdarg>
-#include <cstdio>
 #include <iostream>
 
 #ifdef _WIN32
@@ -24,30 +25,55 @@
 
 namespace calc {
 	static std::string program_name;
+	static bool interactive;
+
+	static std::string filename(const std::string& path) {
+		if (path.empty())
+			return std::string();
+		std::size_t start_index = path.rfind(kDirectorySeparator) + 1;
+		if (start_index == std::string::npos)
+			start_index = 0;
+		return path.substr(start_index);
+	}
+
+	static std::string stem(const std::string& path) {
+		std::string result = filename(path);
+		if (result == "." || result == "..")
+			return result;
+		std::size_t pos = result.rfind('.');
+		return result.substr(0, pos);
+	}
+
+	void init(const char* progname) {
+		program_name = stem(progname);
+	}
 
 	void init(int argc, char* argv[]) {
-		// process command-line arguments
-		program_name = argv[0];
+		program_name = stem(argv[0]);
+#if HAVE_UNISTD_H
+		interactive = isatty(STDIN_FILENO) && isatty(STDERR_FILENO);
+#else
+		interactive = false;
+#endif
 
-		if (!program_name.empty()) {
-			std::string::const_iterator begin, end;
-			for (begin = --(program_name.cend()); begin != program_name.cbegin(); --begin)
-				if (*begin == kDirectorySeparator)
+#if HAVE_UNISTD_H
+		// process command-line arguments
+		int c;
+
+		while ((c = getopt(argc, argv, "i")) != -1) {
+			switch (c) {
+				case 'i':
+					interactive = true;
 					break;
-			++begin;
-			for (end = begin; end != program_name.cend(); ++end)
-				if (*end == '.')
-					break;
-			program_name.assign(begin, end);
+				default:
+					std::abort();
+			}
 		}
+#endif
 	}
 
 	bool is_interactive() {
-#if HAVE_UNISTD_H
-		return isatty(STDIN_FILENO) && isatty(STDERR_FILENO);
-#else
-		return false;
-#endif
+		return interactive;
 	}
 
 	void show_prompt() {
