@@ -143,7 +143,7 @@ namespace calc {
 		 * @param kind		The kind of token.
 		 */
 		constexpr basic_token(const extent_type& extent,
-			                  token_base::kind kind) noexcept :
+		                      token_base::kind kind) noexcept :
 			basic_token(extent, kind, _default_token_flags[kind])
 		{}
 

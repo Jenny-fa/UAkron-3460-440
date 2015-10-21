@@ -18,6 +18,10 @@ namespace calc {
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::next_token() {
+		// IMPORTANT: set eofbit if next character is EOF
+		if (!char_traits_type::not_eof(this->peek()))
+			this->_in.setstate(std::ios_base::eofbit);
+
 		this->skip_blanks();
 
 		// set token offset to current offset
@@ -59,11 +63,11 @@ namespace calc {
 	typename basic_lexer<CharT, Traits>::int_type
 	basic_lexer<CharT, Traits>::get() {
 		assert(this->_in.good());
-		const typename char_traits_type::int_type c = this->_in.get();
+		const int_type c = this->_in.get();
 		if (char_traits_type::not_eof(c))
 			this->script().push_back(char_traits_type::to_char_type(c));
-		if (!char_traits_type::not_eof(this->_in.peek()))
-			this->_in.setstate(std::ios_base::eofbit);
+		// if (!char_traits_type::not_eof(this->_in.peek()))
+		// 	this->_in.setstate(std::ios_base::eofbit);
 		return c;
 	}
 
@@ -85,12 +89,12 @@ namespace calc {
 	template <typename CharT, class Traits>
 	void basic_lexer<CharT, Traits>::ignore() {
 		assert(this->_in.good());
-		const typename char_traits_type::int_type c = this->_in.peek();
+		const int_type c = this->_in.peek();
 		if (char_traits_type::not_eof(c))
 			this->script().push_back(char_traits_type::to_char_type(c));
 		this->_in.ignore();
-		if (!char_traits_type::not_eof(this->_in.peek()))
-			this->_in.setstate(std::ios_base::eofbit);
+		// if (!char_traits_type::not_eof(this->_in.peek()))
+		// 	this->_in.setstate(std::ios_base::eofbit);
 	}
 
 	template <typename CharT, class Traits>

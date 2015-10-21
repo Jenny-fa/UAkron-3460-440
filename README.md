@@ -9,4 +9,4 @@ This repository hosts source code that was written for
 
 ## Contact
 
-Jennifer Yao <jy38@zips.uakron.edu>
+Jennifer Yao \<jy38@zips.uakron.edu\>
