@@ -51,7 +51,7 @@ namespace calc {
 		explicit basic_lexer(streambuf_type* sb) :
 			_traits(), _in(sb), _position_helper(), _token_start_offset(0)
 		{
-			this->_in.exceptions(std::ios_base::failbit);
+			this->_in.exceptions(std::ios_base::badbit);
 		}
 
 		/**
@@ -65,46 +65,6 @@ namespace calc {
 			// unset failbit
 			this->_in.copyfmt(in);
 			this->_in.clear(in.rdstate() & ~std::ios_base::failbit);
-		}
-
-		/**
-		 * Extracts tokens from the input stream until the end-of-file is
-		 * reached, and returns the extracted tokens as a list.
-		 *
-		 * The kind of the last token will always be token_base::kind::eof.
-		 *
-		 * @return	A list of extracted tokens.
-		 */
-		std::list<token_type> lex() {
-			std::list<token_type> tokens;
-			while (true) {
-				token_type token = this->next_token();
-				tokens.push_back(token);
-				if (token.kind() == token_base::kind::eof)
-					break;
-			}
-			assert(!tokens.empty() && tokens.back().kind() == token_base::kind::eof);
-			return tokens;
-		}
-
-		/**
-		 * Extracts tokens from the input stream until the end of the line is
-		 * reached, and returns the extracted tokens as a list.
-		 *
-		 * The newline token is extracted but not stored in the returned list.
-		 *
-		 * @return	A list of extracted tokens.
-		 */
-		std::list<token_type> lex_line() {
-			std::list<token_type> tokens;
-			while (true) {
-				token_type token = this->next_token();
-				if (token.kind() == token_base::kind::newline
-				    || token.kind() == token_base::kind::eof)
-					break;
-				tokens.push_back(token);
-			}
-			return tokens;
 		}
 
 		/**

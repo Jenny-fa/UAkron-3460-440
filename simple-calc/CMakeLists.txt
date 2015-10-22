@@ -23,6 +23,11 @@ set(PACKAGE_URL "https://github.com/Jenny-fa/UAkron-3460-440")
 list(APPEND CMAKE_CXX_IGNORE_EXTENSIONS "ipp" "IPP")
 list(REMOVE_DUPLICATES CMAKE_CXX_IGNORE_EXTENSIONS)
 
+# Set output location of built targets.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+
 # Add options.
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(MOAR_DIGITS "Allow calculator expressions containing multi-digit (instead of single-digit) integer literals." OFF)

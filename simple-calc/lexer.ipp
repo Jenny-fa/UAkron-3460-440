@@ -18,69 +18,64 @@ namespace calc {
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::next_token() {
-		// IMPORTANT: set eofbit if next character is EOF
-		if (!char_traits_type::not_eof(this->peek()))
-			this->_in.setstate(std::ios_base::eofbit);
-
 		this->skip_blanks();
 
 		// set token offset to current offset
 		this->token_start_offset(this->offset());
 
-		if (this->eof())
-			return this->lex_eof();
+		const int_type i = this->peek();
 
-		const CharT c = char_traits_type::to_char_type(this->peek());
+		if (char_traits_type::not_eof(i)) {
+			const CharT c = char_traits_type::to_char_type(i);
 
-		if (this->traits().is_newline_start(c))
-			return this->lex_newline();
+			if (this->traits().is_newline_start(c))
+				return this->lex_newline();
 #if !MOAR_DIGITS
-		if (this->traits().is_digit(c))
-			return this->lex_digit();
+			if (this->traits().is_digit(c))
+				return this->lex_digit();
 #else
-		if (this->traits().is_digit(c))
-			return this->lex_integer();
+			if (this->traits().is_digit(c))
+				return this->lex_integer();
 #endif
-		if (this->traits().is_addition_operator(c))
-			return this->lex_addition_operator();
-		if (this->traits().is_subtraction_operator(c))
-			return this->lex_subtraction_operator();
-		if (this->traits().is_multiplication_operator(c))
-			return this->lex_multiplication_operator();
-		if (this->traits().is_division_operator(c))
-			return this->lex_division_operator();
-		if (this->traits().is_modulus_operator(c))
-			return this->lex_modulus_operator();
-		if (this->traits().is_left_parenthesis(c))
-			return this->lex_left_parenthesis();
-		if (this->traits().is_right_parenthesis(c))
-			return this->lex_right_parenthesis();
+			if (this->traits().is_addition_operator(c))
+				return this->lex_addition_operator();
+			if (this->traits().is_subtraction_operator(c))
+				return this->lex_subtraction_operator();
+			if (this->traits().is_multiplication_operator(c))
+				return this->lex_multiplication_operator();
+			if (this->traits().is_division_operator(c))
+				return this->lex_division_operator();
+			if (this->traits().is_modulus_operator(c))
+				return this->lex_modulus_operator();
+			if (this->traits().is_left_parenthesis(c))
+				return this->lex_left_parenthesis();
+			if (this->traits().is_right_parenthesis(c))
+				return this->lex_right_parenthesis();
 
-		return this->lex_unknown();
+			return this->lex_unknown();
+		}
+
+		this->_in.setstate(std::ios_base::eofbit);
+		return this->lex_eof();
 	}
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::int_type
 	basic_lexer<CharT, Traits>::get() {
-		assert(this->_in.good());
 		const int_type c = this->_in.get();
 		if (char_traits_type::not_eof(c))
 			this->script().push_back(char_traits_type::to_char_type(c));
-		// if (!char_traits_type::not_eof(this->_in.peek()))
-		// 	this->_in.setstate(std::ios_base::eofbit);
 		return c;
 	}
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::int_type
 	basic_lexer<CharT, Traits>::peek() {
-		assert(!this->_in.fail());
 		return this->_in.peek();
 	}
 
 	template <typename CharT, class Traits>
 	void basic_lexer<CharT, Traits>::unget() {
-		assert(!this->_in.fail());
 		this->_in.unget();
 		if (!this->_in.bad())
 			this->script().pop_back();
@@ -88,18 +83,14 @@ namespace calc {
 
 	template <typename CharT, class Traits>
 	void basic_lexer<CharT, Traits>::ignore() {
-		assert(this->_in.good());
 		const int_type c = this->_in.peek();
 		if (char_traits_type::not_eof(c))
 			this->script().push_back(char_traits_type::to_char_type(c));
 		this->_in.ignore();
-		// if (!char_traits_type::not_eof(this->_in.peek()))
-		// 	this->_in.setstate(std::ios_base::eofbit);
 	}
 
 	template <typename CharT, class Traits>
 	void basic_lexer<CharT, Traits>::putback(CharT c) {
-		assert(!this->_in.fail());
 		this->_in.putback(c);
 		if (!this->_in.bad())
 			this->script().pop_back();
@@ -107,12 +98,15 @@ namespace calc {
 
 	template <typename CharT, class Traits>
 	void basic_lexer<CharT, Traits>::skip_blanks() {
-		while (!this->eof()) {
-			const CharT c = char_traits_type::to_char_type(this->peek());
-			if (!this->traits().is_blank(c))
-				break;
+		int_type c = this->peek();
+		while (char_traits_type::not_eof(c) &&
+		       this->traits().is_blank(char_traits_type::to_char_type(c)))
+		{
 			this->ignore();
+			c = this->peek();
 		}
+		if (!char_traits_type::not_eof(c))
+			this->_in.setstate(std::ios_base::eofbit);
 	}
 
 	template <typename CharT, class Traits>
@@ -135,6 +129,8 @@ namespace calc {
 			if (this->traits().is_blank(c) || this->traits().is_newline_start(c))
 				break;
 			this->ignore();
+			if (!char_traits_type::not_eof(this->peek()))
+				this->_in.setstate(std::ios_base::eofbit);
 		} while (!this->eof());
 
 		return token_type(this->extent(), token_type::kind::unknown);
@@ -158,6 +154,8 @@ namespace calc {
 			this->position_helper().add_line_start(this->offset());
 		}
 		else if (this->traits().is_carriage_return(c)) {
+			if (!char_traits_type::not_eof(this->peek()))
+				this->_in.setstate(std::ios_base::eofbit);
 			if (!this->eof()) {
 				c = char_traits_type::to_char_type(this->get());
 				if (this->traits().is_line_feed(c))
@@ -176,6 +174,8 @@ namespace calc {
 	basic_lexer<CharT, Traits>::lex_digit() {
 		assert(!this->eof() && this->traits().is_digit(char_traits_type::to_char_type(this->peek())));
 		this->ignore();
+		if (!char_traits_type::not_eof(this->peek()))
+			this->_in.setstate(std::ios_base::eofbit);
 		return token_type(this->extent(), token_type::kind::digit);
 	}
 #else
@@ -188,6 +188,8 @@ namespace calc {
 			if (!this->traits().is_digit(c))
 				break;
 			this->ignore();
+			if (!char_traits_type::not_eof(this->peek()))
+				this->_in.setstate(std::ios_base::eofbit);
 		} while (!this->eof());
 		return token_type(this->extent(), token_type::kind::integer);
 	}
@@ -198,6 +200,8 @@ namespace calc {
 	basic_lexer<CharT, Traits>::lex_addition_operator() {
 		assert(!this->eof() && this->traits().is_addition_operator(char_traits_type::to_char_type(this->peek())));
 		this->ignore();
+		if (!char_traits_type::not_eof(this->peek()))
+			this->_in.setstate(std::ios_base::eofbit);
 		return token_type(this->extent(), token_type::kind::addition_operator);
 	}
 
@@ -206,6 +210,8 @@ namespace calc {
 	basic_lexer<CharT, Traits>::lex_subtraction_operator() {
 		assert(!this->eof() && this->traits().is_subtraction_operator(char_traits_type::to_char_type(this->peek())));
 		this->ignore();
+		if (!char_traits_type::not_eof(this->peek()))
+			this->_in.setstate(std::ios_base::eofbit);
 		return token_type(this->extent(), token_type::kind::subtraction_operator);
 	}
 
@@ -214,6 +220,8 @@ namespace calc {
 	basic_lexer<CharT, Traits>::lex_multiplication_operator() {
 		assert(!this->eof() && this->traits().is_multiplication_operator(char_traits_type::to_char_type(this->peek())));
 		this->ignore();
+		if (!char_traits_type::not_eof(this->peek()))
+			this->_in.setstate(std::ios_base::eofbit);
 		return token_type(this->extent(), token_type::kind::multiplication_operator);
 	}
 
@@ -222,6 +230,8 @@ namespace calc {
 	basic_lexer<CharT, Traits>::lex_division_operator() {
 		assert(!this->eof() && this->traits().is_division_operator(char_traits_type::to_char_type(this->peek())));
 		this->ignore();
+		if (!char_traits_type::not_eof(this->peek()))
+			this->_in.setstate(std::ios_base::eofbit);
 		return token_type(this->extent(), token_type::kind::division_operator);
 	}
 
@@ -230,6 +240,8 @@ namespace calc {
 	basic_lexer<CharT, Traits>::lex_modulus_operator() {
 		assert(!this->eof() && this->traits().is_modulus_operator(char_traits_type::to_char_type(this->peek())));
 		this->ignore();
+		if (!char_traits_type::not_eof(this->peek()))
+			this->_in.setstate(std::ios_base::eofbit);
 		return token_type(this->extent(), token_type::kind::modulus_operator);
 	}
 
@@ -238,6 +250,8 @@ namespace calc {
 	basic_lexer<CharT, Traits>::lex_left_parenthesis() {
 		assert(!this->eof() && this->traits().is_left_parenthesis(char_traits_type::to_char_type(this->peek())));
 		this->ignore();
+		if (!char_traits_type::not_eof(this->peek()))
+			this->_in.setstate(std::ios_base::eofbit);
 		return token_type(this->extent(), token_type::kind::left_parenthesis);
 	}
 
@@ -246,6 +260,8 @@ namespace calc {
 	basic_lexer<CharT, Traits>::lex_right_parenthesis() {
 		assert(!this->eof() && this->traits().is_right_parenthesis(char_traits_type::to_char_type(this->peek())));
 		this->ignore();
+		if (!char_traits_type::not_eof(this->peek()))
+			this->_in.setstate(std::ios_base::eofbit);
 		return token_type(this->extent(), token_type::kind::right_parenthesis);
 	}
 

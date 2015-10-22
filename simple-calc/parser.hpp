@@ -12,7 +12,6 @@
 
 #include "config.hpp"
 
-#include <iostream>
 #include <cassert>
 #include <memory>
 
@@ -81,6 +80,16 @@ namespace calc {
 		 */
 		locale_type imbue(const locale_type& loc) {
 			return this->lexer().imbue(loc);
+		}
+
+		/**
+		 * Returns true if the associated input stream has no errors and the
+		 * parser is ready for parsing.
+		 * @return	@c true if the input stream has no errors, @c false
+		 * 			otherwise.
+		 */
+		explicit operator bool() const {
+			return static_cast<bool>(this->lexer());
 		}
 
 	private:

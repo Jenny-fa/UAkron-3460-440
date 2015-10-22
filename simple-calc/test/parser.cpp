@@ -9,7 +9,7 @@
 #define LOG_EXPR(x) std::cout << #x << " = " << (x) << std::endl
 
 int main(int argc, char* argv[]) {
-	calc::init(argc, argv);
+	calc::init(argv[0]);
 
 	if (argc > 2) {
 		calc::report_error("Too many arguments.");

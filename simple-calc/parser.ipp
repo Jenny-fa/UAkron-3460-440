@@ -118,7 +118,7 @@ exit:
 				else {
 					token.flags(token_base::flags::has_error);
 					this->report_error(error_id::missing_closing_parenthesis,
-						extent_type(this->position_helper(), token.extent().start_offset(), this->peek().extent().end_offset()),
+						extent_type(this->position_helper(), token.extent().start_offset(), this->offset()),
 						"Nested expression is missing closing parenthesis.");
 				}
 				break;
