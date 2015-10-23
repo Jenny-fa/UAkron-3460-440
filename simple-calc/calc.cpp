@@ -1,5 +1,8 @@
 #include "config.hpp"
 
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include <iostream>
 
 #include "cli.hpp"
@@ -10,7 +13,12 @@
 int main(int argc, char* argv[]) {
 	calc::init(argc, argv);
 
-	if (argc > 1) {
+#if HAVE_UNISTD_H
+	if (optind < argc)
+#else
+	if (argc > 1)
+#endif
+	{
 		calc::report_error("Too many arguments.");
 		return 2;
 	}
@@ -36,8 +44,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	catch (const std::ios_base::failure& exception) {
-		calc::report_error("An unexpected I/O error occurred.\n\twhat: %s",
-			exception.what());
+		calc::report_error("An unexpected I/O error occurred.");
 		return 1;
 	}
 

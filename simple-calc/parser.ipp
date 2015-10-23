@@ -39,6 +39,8 @@ namespace calc {
 
 	template <typename CharT, class Traits>
 	std::unique_ptr<const expr> basic_parser<CharT, Traits>::parse_expr() {
+		this->expr_start_offset(this->offset());
+
 		std::unique_ptr<const expr> result = this->parse_factor();
 
 		while (!this->eof()) {
@@ -99,19 +101,22 @@ exit:
 	template <typename CharT, class Traits>
 	std::unique_ptr<const expr> basic_parser<CharT, Traits>::parse_term() {
 		std::unique_ptr<const expr> result = nullptr;
-		token_type& token = this->get();
+		token_type& token = this->peek();
 
 		switch (token.kind()) {
 #if !MOAR_DIGITS
 			case token_base::kind::digit:
 				result = std::make_unique<digit>(stoi(token.text().to_string()));
+				this->ignore();
 				break;
 #else
 			case token_base::kind::integer:
 				result = std::make_unique<integer>(stoll(token.text().to_string()));
+				this->ignore();
 				break;
 #endif
 			case token_base::kind::left_parenthesis:
+				this->ignore();
 				result = this->parse_expr();
 				if (this->peek().kind() == token_base::kind::right_parenthesis)
 					this->ignore();
@@ -123,6 +128,7 @@ exit:
 				}
 				break;
 			case token_base::kind::unknown:
+				this->ignore();
 				token.flags(token_base::flags::has_error);
 				this->report_error(error_id::unknown_token, token.extent(), "Unrecognized token.");
 				break;
@@ -135,6 +141,7 @@ exit:
 				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected end of line.");
 				break;
 			default:
+				this->ignore();
 				token.flags(token_base::flags::has_error);
 				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected token.");
 				break;

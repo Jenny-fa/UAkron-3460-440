@@ -65,6 +65,8 @@ namespace calc {
 				case 'i':
 					interactive = true;
 					break;
+				case '?':
+					std::exit(2);
 				default:
 					std::abort();
 			}
