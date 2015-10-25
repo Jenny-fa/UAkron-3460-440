@@ -7,6 +7,7 @@
  * @copyright	All rights reserved.
  */
 
+#include <cassert>
 #include <stdexcept>
 
 #include "ast.hpp"
@@ -21,8 +22,7 @@ namespace calc {
 	unary_expr::unary_expr(std::unique_ptr<const expr>&& operand1) :
 		_operand(std::move(operand1))
 	{
-		if (!this->_operand)
-			throw std::invalid_argument("calc::unary_expr::unary_expr");
+		assert(this->_operand);
 	}
 
 	unary_expr::~unary_expr() {}
@@ -39,8 +39,7 @@ namespace calc {
 	                         std::unique_ptr<const expr>&& operand2) :
 		_left_operand(std::move(operand1)), _right_operand(std::move(operand2))
 	{
-		if (!this->_left_operand || !this->_right_operand)
-			throw std::invalid_argument("calc::binary_expr::binary_expr");
+		assert(this->_left_operand && this->_right_operand);
 	}
 
 	binary_expr::~binary_expr() {}
@@ -67,27 +66,25 @@ namespace calc {
 
 	std::intmax_t division_expr::value() const {
 		const std::intmax_t rhs_value = this->right_operand()->value();
-		if (rhs_value == 0)
+		if (!rhs_value)
 			throw std::domain_error("calc::division_expr::value");
 		return this->left_operand()->value() / rhs_value;
 	}
 
 	std::intmax_t modulus_expr::value() const {
 		const std::intmax_t rhs_value = this->right_operand()->value();
-		if (rhs_value == 0)
+		if (!rhs_value)
 			throw std::domain_error("calc::modulus_expr::value");
 		return this->left_operand()->value() % rhs_value;
 	}
 
 #if !MOAR_DIGITS
 	digit::digit(int v) : _value(v) {
-		if (v < 0 || v > 9)
-			throw std::invalid_argument("calc::digit::digit");
+		assert(v >= 0 && v <= 9);
 	}
 
 	digit& digit::operator=(int v) {
-		if (v < 0 || v > 9)
-			throw std::invalid_argument("calc::digit::operator=");
+		assert(v >= 0 && v <= 9);
 		this->_value = v;
 		return *this;
 	}

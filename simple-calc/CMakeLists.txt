@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 # Set CMake module path.
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 
 include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
@@ -108,7 +108,7 @@ set_target_properties(libcalc PROPERTIES OUTPUT_NAME calc)
 if(CXX_COMPILER_HAS_STDCXX14_FLAG)
 	target_compile_options(libcalc PUBLIC -std=c++14)
 endif()
-target_include_directories(libcalc PUBLIC "$<BUILD_INTERFACE:${simple-calc_SOURCE_DIR};${simple-calc_BINARY_DIR}>")
+target_include_directories(libcalc PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>")
 
 add_executable(calc calc.cpp)
 target_link_libraries(calc libcalc)
