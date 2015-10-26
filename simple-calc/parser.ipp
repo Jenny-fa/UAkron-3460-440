@@ -17,24 +17,36 @@
 
 namespace calc {
 	template <typename CharT, class Traits>
-	std::unique_ptr<const expr> basic_parser<CharT, Traits>::next_expr() {
+	std::unique_ptr<const expr> basic_parser<CharT, Traits>::next_expr(bool skip_newlines) {
 		// lazily extract first token from input stream
 		if (this->tokens().empty())
 			this->tokens().push_back(this->lexer().next_token());
-		this->skip_newlines();
+		// skip newline at the end of the previous expression
+		else if (this->peek().kind() == token_base::kind::newline)
+			this->ignore();
+
+		if (skip_newlines)
+			while (!this->eof() && this->peek().kind() == token_base::kind::newline)
+				this->ignore();
+
 		if (this->eof())
 			return std::unique_ptr<const expr>();
-		return this->parse_expr();
-	}
 
-	template <typename CharT, class Traits>
-	void basic_parser<CharT, Traits>::skip_newlines() {
-		while (!this->eof()) {
-			token_type& token = this->peek();
-			if (token.kind() != token_base::kind::newline)
-				break;
-			this->ignore();
+		// check whether newline follows expression
+		std::unique_ptr<const expr> result = this->parse_expr();
+		token_type& token = this->peek();
+
+		if (token.kind() != token_base::kind::newline) {
+			// skip the rest of the tokens in this line
+			while (!this->eof() && this->peek().kind() != token_base::kind::newline)
+				this->ignore();
+			token.flags(token_base::flags::has_error);
+			this->report_error(error_id::unexpected_token,
+				this->extent_from(token.extent().start_offset()),
+				"Expected newline before expression.");
 		}
+
+		return std::move(result);
 	}
 
 	template <typename CharT, class Traits>
@@ -62,6 +74,7 @@ namespace calc {
 					goto exit;
 			}
 		}
+
 exit:
 		return std::move(result);
 	}
@@ -94,6 +107,7 @@ exit:
 					goto exit;
 			}
 		}
+
 exit:
 		return std::move(result);
 	}
@@ -123,14 +137,9 @@ exit:
 				else {
 					token.flags(token_base::flags::has_error);
 					this->report_error(error_id::missing_closing_parenthesis,
-						extent_type(this->position_helper(), token.extent().start_offset(), this->offset()),
-						"Nested expression is missing closing parenthesis.");
+						this->extent_from(token.extent().start_offset()),
+						"Expression in parentheses is missing ')'.");
 				}
-				break;
-			case token_base::kind::unknown:
-				this->ignore();
-				token.flags(token_base::flags::has_error);
-				this->report_error(error_id::unknown_token, token.extent(), "Unrecognized token.");
 				break;
 			case token_base::kind::eof:
 				token.flags(token_base::flags::has_error);
@@ -139,6 +148,11 @@ exit:
 			case token_base::kind::newline:
 				token.flags(token_base::flags::has_error);
 				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected end of line.");
+				break;
+			case token_base::kind::unknown:
+				this->ignore();
+				token.flags(token_base::flags::has_error);
+				this->report_error(error_id::unknown_token, token.extent(), "Unrecognized token.");
 				break;
 			default:
 				this->ignore();

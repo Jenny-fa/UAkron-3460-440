@@ -112,29 +112,29 @@ macro(_DO_SET_SUBSTITUTION_VARIABLES SYMBOL FILES)
   # enclosing an (optional) list of argument types.
   if(NOT ${SYMBOL} MATCHES "^.*operator\\(\\)$"
      AND ${SYMBOL} MATCHES "^(.+)\\((.*)\\)$")
-    set(SYMBOL_NAME "${CMAKE_MATCH_1}")
+    set(SYMBOL_NAME ${CMAKE_MATCH_1})
     set(ARG_LIST)
 
-    string(STRIP "${CMAKE_MATCH_2}" CMAKE_MATCH_2)
+    string(STRIP ${CMAKE_MATCH_2} CMAKE_MATCH_2)
 
     # Parse list of function argument types if one is provided.
     if(NOT CMAKE_MATCH_2 STREQUAL "")
-      string(LENGTH "${CMAKE_MATCH_2}" n) # length of argument type list
+      string(LENGTH ${CMAKE_MATCH_2} n) # length of argument type list
       set(i 0) # current index in argument type list string
       set(level 0) # nesting level of "<...>" template argument lists
       set(begin 0) # index of the beginning of the current argument type
       set(count 0) # number of argument types parsed so far
 
       while(i LESS n)
-        string(SUBSTRING "${CMAKE_MATCH_2}" ${i} 1 c)
+        string(SUBSTRING ${CMAKE_MATCH_2} ${i} 1 c)
         if(c STREQUAL "<")
           math(EXPR level "${level} + 1")
         elseif(c STREQUAL ">")
           math(EXPR level "${level} - 1")
         elseif(c STREQUAL "," AND level EQUAL 0)
           math(EXPR length "${i} - ${begin}")
-          string(SUBSTRING "${CMAKE_MATCH_2}" ${begin} ${length} SYMBOL_ARG_TYPE_${count})
-          string(STRIP "${SYMBOL_ARG_TYPE_${count}}" SYMBOL_ARG_TYPE_${count})
+          string(SUBSTRING ${CMAKE_MATCH_2} ${begin} ${length} SYMBOL_ARG_TYPE_${count})
+          string(STRIP ${SYMBOL_ARG_TYPE_${count}} SYMBOL_ARG_TYPE_${count})
           math(EXPR begin "${i} + 1")
           math(EXPR count "${count} + 1")
         endif()
@@ -143,15 +143,15 @@ macro(_DO_SET_SUBSTITUTION_VARIABLES SYMBOL FILES)
         endif()
         math(EXPR i "${i} + 1")
       endwhile()
-      string(SUBSTRING "${CMAKE_MATCH_2}" ${begin} -1 SYMBOL_ARG_TYPE_${count})
-      string(STRIP "${SYMBOL_ARG_TYPE_${count}}" SYMBOL_ARG_TYPE_${count})
+      string(SUBSTRING ${CMAKE_MATCH_2} ${begin} -1 SYMBOL_ARG_TYPE_${count})
+      string(STRIP ${SYMBOL_ARG_TYPE_${count}} SYMBOL_ARG_TYPE_${count})
 
       foreach(i RANGE ${count})
         if(SYMBOL_ARG_TYPE_${i} STREQUAL "")
           message(FATAL_ERROR "Invalid symbol name given to CHECK_CXX_SYMBOL_EXISTS(): \"${SYMBOL}\"")
         endif()
         set(ARG_DECLARATIONS "${ARG_DECLARATIONS}${SYMBOL_ARG_TYPE_${i}} arg${i};")
-        set(ARG_LIST "${ARG_LIST}arg${i}")
+        set(ARG_LIST ${ARG_LIST}arg${i})
         if(i LESS count)
           set(ARG_DECLARATIONS "${ARG_DECLARATIONS}\n  ")
           set(ARG_LIST "${ARG_LIST}, ")

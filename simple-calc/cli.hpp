@@ -15,7 +15,7 @@
 #include "parse_error.hpp"
 
 namespace calc {
-	void init(const char* progname);
+	void init(const char* name);
 	void init(int argc, char* argv[]);
 	bool is_interactive();
 	void show_prompt();

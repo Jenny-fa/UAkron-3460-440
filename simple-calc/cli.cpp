@@ -25,7 +25,7 @@
 
 namespace calc {
 	static std::string program_name;
-	static bool interactive;
+	static bool program_interactive;
 
 	static bool path_has_drive(const std::string& path) {
 		if (path.size() >= 2) {
@@ -72,16 +72,16 @@ namespace calc {
 		return filename.substr(0, end_index);
 	}
 
-	void init(const char* progname) {
-		program_name = path_stem(progname);
+	void init(const char* name) {
+		program_name = path_stem(name);
 	}
 
 	void init(int argc, char* argv[]) {
 		program_name = path_stem(argv[0]);
 #if HAVE_UNISTD_H
-		interactive = isatty(STDIN_FILENO) && isatty(STDERR_FILENO);
+		program_interactive = isatty(STDIN_FILENO) && isatty(STDERR_FILENO);
 #else
-		interactive = false;
+		program_interactive = false;
 #endif
 
 #if HAVE_UNISTD_H
@@ -91,7 +91,7 @@ namespace calc {
 		while ((c = getopt(argc, argv, "i")) != -1) {
 			switch (c) {
 				case 'i':
-					interactive = true;
+					program_interactive = true;
 					break;
 				case '?':
 					std::exit(2);
@@ -103,7 +103,7 @@ namespace calc {
 	}
 
 	bool is_interactive() {
-		return interactive;
+		return program_interactive;
 	}
 
 	void show_prompt() {

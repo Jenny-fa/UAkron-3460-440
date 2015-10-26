@@ -60,10 +60,13 @@ namespace calc {
 		/**
 		 * Parses an expression and returns a newly allocated abstract syntax
 		 * tree.
-		 * @return	An abstract syntax tree that represents the parsed
-		 * 			expression.
+		 * @param skip_newlines	@c true if empty lines preceding the
+		 * 						expression should be skipped. Defaults to
+		 * 						@c false.
+		 * @return				An abstract syntax tree that represents the
+		 * 						parsed expression.
 		 */
-		std::unique_ptr<const expr> next_expr();
+		std::unique_ptr<const expr> next_expr(bool skip_newlines = false);
 
 		/**
 		 * Returns the current locale associated with the parser.
@@ -133,6 +136,10 @@ namespace calc {
 			return extent_type(this->position_helper(), this->expr_start_offset(), this->offset());
 		}
 
+		extent_type extent_from(std::size_t start_offset) const noexcept {
+			return extent_type(this->position_helper(), start_offset, this->offset());
+		}
+
 		std::list<token_type>& tokens() noexcept {
 			return this->_tokens;
 		}
@@ -150,13 +157,12 @@ namespace calc {
 		}
 
 		bool eof() const {
-			assert(!this->tokens().empty());
-			return this->tokens().back().kind() == token_base::kind::eof;
+			return this->peek().kind() == token_base::kind::eof;
 		}
 
 		token_type& get() {
 			assert(!this->eof());
-			token_type& next_token = this->tokens().back();
+			token_type& next_token = this->peek();
 			this->tokens().push_back(this->lexer().next_token());
 			return next_token;
 		}
@@ -172,9 +178,8 @@ namespace calc {
 		}
 
 		void unget() {
-			assert(!this->tokens().empty());
-			string_view_type prev_token_text = this->tokens().back().text();
-			for (auto itr = prev_token_text.rbegin(); itr != prev_token_text.rend(); ++itr)
+			string_view_type next_token_text = this->peek().text();
+			for (auto itr = next_token_text.rbegin(); itr != next_token_text.rend(); ++itr)
 				this->lexer().putback(*itr);
 			this->tokens().pop_back();
 			this->lexer().rewind_blanks();
@@ -184,8 +189,6 @@ namespace calc {
 			assert(!this->eof());
 			this->tokens().push_back(this->lexer().next_token());
 		}
-
-		void skip_newlines();
 
 		std::unique_ptr<const expr> parse_expr();
 		std::unique_ptr<const expr> parse_factor();
