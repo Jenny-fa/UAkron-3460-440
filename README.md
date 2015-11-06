@@ -9,6 +9,7 @@ minimum, a C++11 compiler.
 ## Homework Assignments
 
 1. simple-calc
+2. extended-calc
 
 ## Contact
 
