@@ -15,9 +15,10 @@
 #include <stdexcept>
 
 #include "script.hpp"
+#include "constants.hpp"
 
 namespace calc {
-	template <typename CharT, class Traits = symbol_traits<CharT> >
+	template <typename CharT, class Traits = symbol_traits<CharT>>
 	class basic_parse_error;
 
 	/// A parsing error for @c char characters.
@@ -25,13 +26,6 @@ namespace calc {
 
 	/// A parsing error for @c wchar_t characters.
 	typedef basic_parse_error<wchar_t> wparse_error;
-
-	/// Identifies the kind of parsing error.
-	enum error_id {
-		unknown_token,
-		unexpected_token,
-		missing_closing_parenthesis
-	};
 
 	/**
 	 * Defines the type of exception object thrown to report parsing errors.

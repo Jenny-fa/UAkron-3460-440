@@ -41,7 +41,17 @@ namespace calc {
 		typedef std::basic_ostream<CharT> ostream_type;
 		typedef std::locale locale_type;
 
-		symbol_traits() : _locale() {}
+		static constexpr bool eq(char_type c1, char_type c2) noexcept {
+			return char_traits_type::eq(c1, c2);
+		}
+
+		static constexpr bool is_eof(int_type c) noexcept {
+			return char_traits_type::eq_int_type(c, char_traits_type::eof());
+		}
+
+		static constexpr char_type to_char_type(int_type c) noexcept {
+			return char_traits_type::to_char_type(c);
+		}
 
 		locale_type getloc() const {
 			return this->_locale;
@@ -53,18 +63,18 @@ namespace calc {
 			return temp;
 		}
 
-		bool is_blank(CharT c) const;
-		bool is_newline_start(CharT c) const;
-		bool is_line_feed(CharT c) const;
-		bool is_carriage_return(CharT c) const;
-		bool is_digit(CharT c) const;
-		bool is_addition_operator(CharT c) const;
-		bool is_subtraction_operator(CharT c) const;
-		bool is_multiplication_operator(CharT c) const;
-		bool is_division_operator(CharT c) const;
-		bool is_modulus_operator(CharT c) const;
-		bool is_left_parenthesis(CharT c) const;
-		bool is_right_parenthesis(CharT c) const;
+		bool is_blank(char_type c) const;
+		bool is_newline_start(char_type c) const;
+		bool is_line_feed(char_type c) const;
+		bool is_carriage_return(char_type c) const;
+		bool is_digit(char_type c) const;
+		bool is_addition_operator(char_type c) const;
+		bool is_subtraction_operator(char_type c) const;
+		bool is_multiplication_operator(char_type c) const;
+		bool is_division_operator(char_type c) const;
+		bool is_modulus_operator(char_type c) const;
+		bool is_left_parenthesis(char_type c) const;
+		bool is_right_parenthesis(char_type c) const;
 
 	private:
 		locale_type _locale;
@@ -83,7 +93,17 @@ namespace calc {
 		typedef std::basic_ostream<char> ostream_type;
 		typedef std::locale locale_type;
 
-		symbol_traits() : _locale() {}
+		static constexpr bool eq(char_type c1, char_type c2) noexcept {
+			return char_traits_type::eq(c1, c2);
+		}
+
+		static constexpr bool is_eof(int_type c) noexcept {
+			return char_traits_type::eq_int_type(c, char_traits_type::eof());
+		}
+
+		static constexpr char_type to_char_type(int_type c) noexcept {
+			return char_traits_type::to_char_type(c);
+		}
 
 		locale_type getloc() const {
 			return this->_locale;
@@ -95,7 +115,7 @@ namespace calc {
 			return temp;
 		}
 
-		bool is_blank(char c) const {
+		bool is_blank(char_type c) const {
 #if HAVE_STD_ISBLANK
 		return std::isblank<char>(c, this->_locale);
 #else
@@ -103,47 +123,47 @@ namespace calc {
 #endif
 		}
 
-		bool is_newline_start(char c) const {
+		bool is_newline_start(char_type c) const {
 			return this->is_line_feed(c) || this->is_carriage_return(c);
 		}
 
-		bool is_line_feed(char c) const {
+		bool is_line_feed(char_type c) const {
 			return char_traits_type::eq(c, '\n');
 		}
 
-		bool is_carriage_return(char c) const {
+		bool is_carriage_return(char_type c) const {
 			return char_traits_type::eq(c, '\r');
 		}
 
-		bool is_digit(char c) const {
+		bool is_digit(char_type c) const {
 			return std::isdigit(c, this->_locale);
 		}
 
-		bool is_addition_operator(char c) const {
+		bool is_addition_operator(char_type c) const {
 			return char_traits_type::eq(c, '+');
 		}
 
-		bool is_subtraction_operator(char c) const {
+		bool is_subtraction_operator(char_type c) const {
 			return char_traits_type::eq(c, '-');
 		}
 
-		bool is_multiplication_operator(char c) const {
+		bool is_multiplication_operator(char_type c) const {
 			return char_traits_type::eq(c, '*');
 		}
 
-		bool is_division_operator(char c) const {
+		bool is_division_operator(char_type c) const {
 			return char_traits_type::eq(c, '/');
 		}
 
-		bool is_modulus_operator(char c) const {
+		bool is_modulus_operator(char_type c) const {
 			return char_traits_type::eq(c, '%');
 		}
 
-		bool is_left_parenthesis(char c) const {
+		bool is_left_parenthesis(char_type c) const {
 			return char_traits_type::eq(c, '(');
 		}
 
-		bool is_right_parenthesis(char c) const {
+		bool is_right_parenthesis(char_type c) const {
 			return char_traits_type::eq(c, ')');
 		}
 
@@ -164,7 +184,17 @@ namespace calc {
 		typedef std::basic_ostream<wchar_t> ostream_type;
 		typedef std::locale locale_type;
 
-		symbol_traits() : _locale() {}
+		static constexpr bool eq(char_type c1, char_type c2) noexcept {
+			return char_traits_type::eq(c1, c2);
+		}
+
+		static constexpr bool is_eof(int_type c) noexcept {
+			return char_traits_type::eq_int_type(c, char_traits_type::eof());
+		}
+
+		static constexpr char_type to_char_type(int_type c) noexcept {
+			return char_traits_type::to_char_type(c);
+		}
 
 		locale_type getloc() const {
 			return this->_locale;
@@ -176,7 +206,7 @@ namespace calc {
 			return temp;
 		}
 
-		bool is_blank(wchar_t c) const {
+		bool is_blank(char_type c) const {
 #if HAVE_STD_ISBLANK
 		return std::isblank<wchar_t>(c, this->_locale);
 #else
@@ -184,47 +214,47 @@ namespace calc {
 #endif
 		}
 
-		bool is_newline_start(wchar_t c) const {
+		bool is_newline_start(char_type c) const {
 			return this->is_line_feed(c) || this->is_carriage_return(c);
 		}
 
-		bool is_line_feed(wchar_t c) const {
+		bool is_line_feed(char_type c) const {
 			return char_traits_type::eq(c, L'\n');
 		}
 
-		bool is_carriage_return(wchar_t c) const {
+		bool is_carriage_return(char_type c) const {
 			return char_traits_type::eq(c, L'\r');
 		}
 
-		bool is_digit(wchar_t c) const {
+		bool is_digit(char_type c) const {
 			return std::isdigit(c, this->_locale);
 		}
 
-		bool is_addition_operator(wchar_t c) const {
+		bool is_addition_operator(char_type c) const {
 			return char_traits_type::eq(c, L'+');
 		}
 
-		bool is_subtraction_operator(wchar_t c) const {
+		bool is_subtraction_operator(char_type c) const {
 			return char_traits_type::eq(c, L'-');
 		}
 
-		bool is_multiplication_operator(wchar_t c) const {
+		bool is_multiplication_operator(char_type c) const {
 			return char_traits_type::eq(c, L'*');
 		}
 
-		bool is_division_operator(wchar_t c) const {
+		bool is_division_operator(char_type c) const {
 			return char_traits_type::eq(c, L'/');
 		}
 
-		bool is_modulus_operator(wchar_t c) const {
+		bool is_modulus_operator(char_type c) const {
 			return char_traits_type::eq(c, L'%');
 		}
 
-		bool is_left_parenthesis(wchar_t c) const {
+		bool is_left_parenthesis(char_type c) const {
 			return char_traits_type::eq(c, L'(');
 		}
 
-		bool is_right_parenthesis(wchar_t c) const {
+		bool is_right_parenthesis(char_type c) const {
 			return char_traits_type::eq(c, L')');
 		}
 

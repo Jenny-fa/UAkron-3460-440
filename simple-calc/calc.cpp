@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
 				calc::report_error(exception);
 			}
 			catch (const std::domain_error& exception) {
-				calc::report_error("Division by zero.");
+				calc::report_error("Attempt to divide by zero.");
 			}
 		}
 	}

@@ -22,11 +22,11 @@ namespace calc {
 		if (this->tokens().empty())
 			this->tokens().push_back(this->lexer().next_token());
 		// skip newline at the end of the previous expression
-		else if (this->peek().kind() == token_base::kind::newline)
+		else if (this->peek().kind() == token_kind::newline)
 			this->ignore();
 
 		if (skip_newlines)
-			while (!this->eof() && this->peek().kind() == token_base::kind::newline)
+			while (!this->eof() && this->peek().kind() == token_kind::newline)
 				this->ignore();
 
 		if (this->eof())
@@ -36,11 +36,11 @@ namespace calc {
 		std::unique_ptr<const expr> result = this->parse_expr();
 		token_type& token = this->peek();
 
-		if (token.kind() != token_base::kind::newline) {
+		if (token.kind() != token_kind::newline) {
 			// skip the rest of the tokens in this line
-			while (!this->eof() && this->peek().kind() != token_base::kind::newline)
+			while (!this->eof() && this->peek().kind() != token_kind::newline)
 				this->ignore();
-			token.flags(token_base::flags::has_error);
+			token.flags(token_flags::has_error);
 			this->report_error(error_id::unexpected_token,
 				this->extent_from(token.extent().start_offset()),
 				"Expected newline before expression.");
@@ -60,12 +60,12 @@ namespace calc {
 			token_type& token = this->peek();
 
 			switch (token.kind()) {
-				case token_base::kind::addition_operator:
+				case token_kind::addition_operator:
 					this->ignore();
 					rest = this->parse_factor();
 					result = std::make_unique<addition_expr>(std::move(result), std::move(rest));
 					break;
-				case token_base::kind::subtraction_operator:
+				case token_kind::subtraction_operator:
 					this->ignore();
 					rest = this->parse_factor();
 					result = std::make_unique<subtraction_expr>(std::move(result), std::move(rest));
@@ -88,17 +88,17 @@ exit:
 			token_type& token = this->peek();
 
 			switch (token.kind()) {
-				case token_base::kind::multiplication_operator:
+				case token_kind::multiplication_operator:
 					this->ignore();
 					rest = this->parse_term();
 					result = std::make_unique<multiplication_expr>(std::move(result), std::move(rest));
 					break;
-				case token_base::kind::division_operator:
+				case token_kind::division_operator:
 					this->ignore();
 					rest = this->parse_term();
 					result = std::make_unique<division_expr>(std::move(result), std::move(rest));
 					break;
-				case token_base::kind::modulus_operator:
+				case token_kind::modulus_operator:
 					this->ignore();
 					rest = this->parse_term();
 					result = std::make_unique<modulus_expr>(std::move(result), std::move(rest));
@@ -119,44 +119,44 @@ exit:
 
 		switch (token.kind()) {
 #if !MOAR_DIGITS
-			case token_base::kind::digit:
+			case token_kind::digit:
 				result = std::make_unique<digit>(stoi(token.text().to_string()));
 				this->ignore();
 				break;
 #else
-			case token_base::kind::integer:
+			case token_kind::integer:
 				result = std::make_unique<integer>(stoll(token.text().to_string()));
 				this->ignore();
 				break;
 #endif
-			case token_base::kind::left_parenthesis:
+			case token_kind::left_parenthesis:
 				this->ignore();
 				result = this->parse_expr();
-				if (this->peek().kind() == token_base::kind::right_parenthesis)
+				if (this->peek().kind() == token_kind::right_parenthesis)
 					this->ignore();
 				else {
-					token.flags(token_base::flags::has_error);
-					this->report_error(error_id::missing_closing_parenthesis,
+					token.flags(token_flags::has_error);
+					this->report_error(error_id::missing_end_parenthesis,
 						this->extent_from(token.extent().start_offset()),
 						"Expression in parentheses is missing ')'.");
 				}
 				break;
-			case token_base::kind::eof:
-				token.flags(token_base::flags::has_error);
+			case token_kind::eof:
+				token.flags(token_flags::has_error);
 				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected end of file.");
 				break;
-			case token_base::kind::newline:
-				token.flags(token_base::flags::has_error);
+			case token_kind::newline:
+				token.flags(token_flags::has_error);
 				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected end of line.");
 				break;
-			case token_base::kind::unknown:
+			case token_kind::unknown:
 				this->ignore();
-				token.flags(token_base::flags::has_error);
+				token.flags(token_flags::has_error);
 				this->report_error(error_id::unknown_token, token.extent(), "Unrecognized token.");
 				break;
 			default:
 				this->ignore();
-				token.flags(token_base::flags::has_error);
+				token.flags(token_flags::has_error);
 				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected token.");
 				break;
 		}

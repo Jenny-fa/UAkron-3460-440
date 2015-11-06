@@ -42,43 +42,43 @@ int main(int argc, char* argv[]) {
 			std::cout << "\textent: " << token.extent() << '\n';
 			std::cout << "\tkind: ";
 			switch (token.kind()) {
-				case calc::token_base::unknown:
+				case calc::token_kind::unknown:
 					std::cout << "unknown";
 					break;
-				case calc::token_base::eof:
+				case calc::token_kind::eof:
 					std::cout << "eof";
 					break;
-				case calc::token_base::newline:
+				case calc::token_kind::newline:
 					std::cout << "newline";
 					break;
 #if !MOAR_DIGITS
-				case calc::token_base::digit:
+				case calc::token_kind::digit:
 					std::cout << "digit";
 					break;
 #else
-				case calc::token_base::integer:
+				case calc::token_kind::integer:
 					std::cout << "integer";
 					break;
 #endif
-				case calc::token_base::addition_operator:
+				case calc::token_kind::addition_operator:
 					std::cout << "addition_operator";
 					break;
-				case calc::token_base::subtraction_operator:
+				case calc::token_kind::subtraction_operator:
 					std::cout << "subtraction_operator";
 					break;
-				case calc::token_base::multiplication_operator:
+				case calc::token_kind::multiplication_operator:
 					std::cout << "multiplication_operator";
 					break;
-				case calc::token_base::division_operator:
+				case calc::token_kind::division_operator:
 					std::cout << "division_operator";
 					break;
-				case calc::token_base::modulus_operator:
+				case calc::token_kind::modulus_operator:
 					std::cout << "modulus_operator";
 					break;
-				case calc::token_base::left_parenthesis:
+				case calc::token_kind::left_parenthesis:
 					std::cout << "left_parenthesis";
 					break;
-				case calc::token_base::right_parenthesis:
+				case calc::token_kind::right_parenthesis:
 					std::cout << "right_parenthesis";
 					break;
 				default:
@@ -86,14 +86,14 @@ int main(int argc, char* argv[]) {
 					break;
 			}
 			std::cout << '\n';
-			std::cout << "\tflags: " << token.flags();
+			std::cout << "\tflags: " << static_cast<unsigned int>(token.flags());;
 			if (!token)
 				std::cout << " (ERROR)";
 			std::cout << '\n';
 			std::cout << "\ttext: " << token.text();
 			std::cout << std::endl;
 
-			if (token.kind() == calc::token_base::eof)
+			if (token.kind() == calc::token_kind::eof)
 				break;
 		}
 	}

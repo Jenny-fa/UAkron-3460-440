@@ -157,7 +157,7 @@ namespace calc {
 		}
 
 		bool eof() const {
-			return this->peek().kind() == token_base::kind::eof;
+			return this->peek().kind() == token_kind::eof;
 		}
 
 		token_type& get() {

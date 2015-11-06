@@ -20,7 +20,7 @@
 #include "symbol_traits.hpp"
 
 namespace calc {
-	template <typename CharT, class Traits = symbol_traits<CharT> >
+	template <typename CharT, class Traits = symbol_traits<CharT>>
 	class basic_script_position_helper;
 
 	/// A script position helper for @c char characters.
@@ -29,7 +29,7 @@ namespace calc {
 	/// A script position helper for @c wchar_t characters.
 	typedef basic_script_position_helper<wchar_t> wscript_position_helper;
 
-	template <typename CharT, class Traits = symbol_traits<CharT> >
+	template <typename CharT, class Traits = symbol_traits<CharT>>
 	class basic_script_position;
 
 	/// A script position for @c char characters.
@@ -38,7 +38,7 @@ namespace calc {
 	/// A script position for @c wchar_t characters.
 	typedef basic_script_position<wchar_t> wscript_position;
 
-	template <typename CharT, class Traits = symbol_traits<CharT> >
+	template <typename CharT, class Traits = symbol_traits<CharT>>
 	class basic_script_extent;
 
 	/// A script extent for @c char characters.
@@ -177,10 +177,10 @@ namespace calc {
 		       || position1.offset() != position2.offset();
 	}
 
-	template <typename CharT, class SymbolTraits, class CharTraits = typename SymbolTraits::char_traits_type>
-	std::basic_ostream<CharT, CharTraits>&
-	operator<<(std::basic_ostream<CharT, CharTraits>& out,
-	           const basic_script_position<CharT, SymbolTraits>& position);
+	template <typename CharT, class Traits, class STraits = typename Traits::char_traits_type>
+	std::basic_ostream<CharT, STraits>&
+	operator<<(std::basic_ostream<CharT, STraits>& out,
+	           const basic_script_position<CharT, Traits>& position);
 
 	/**
 	 * Represents a span of text in a script.
@@ -268,10 +268,10 @@ namespace calc {
 		       || extent1.end_offset() != extent2.end_offset();
 	}
 
-	template <typename CharT, class SymbolTraits, class CharTraits = typename SymbolTraits::char_traits_type>
-	std::basic_ostream<CharT, CharTraits>&
-	operator<<(std::basic_ostream<CharT, CharTraits>& out,
-	           const basic_script_extent<CharT, SymbolTraits>& extent);
+	template <typename CharT, class Traits, class STraits = typename Traits::char_traits_type>
+	std::basic_ostream<CharT, STraits>&
+	operator<<(std::basic_ostream<CharT, STraits>& out,
+	           const basic_script_extent<CharT, Traits>& extent);
 } // namespace calc
 
 #include "script.ipp"

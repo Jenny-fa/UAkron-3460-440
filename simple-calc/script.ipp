@@ -105,10 +105,10 @@ namespace calc {
 		return script_view.substr(this->start_offset(), this->end_offset() - this->start_offset());
 	}
 
-	template <typename CharT, class SymbolTraits, class CharTraits>
-	std::basic_ostream<CharT, CharTraits>&
-	operator<<(std::basic_ostream<CharT, CharTraits>& out,
-	           const basic_script_position<CharT, SymbolTraits>& position)
+	template <typename CharT, class Traits, class STraits>
+	std::basic_ostream<CharT, STraits>&
+	operator<<(std::basic_ostream<CharT, STraits>& out,
+	           const basic_script_position<CharT, Traits>& position)
 	{
 		const CharT left_brace = out.widen('{');
 		const CharT right_brace = out.widen('}');
@@ -118,10 +118,10 @@ namespace calc {
 		           << position.column_number() << right_brace;
 	}
 
-	template <typename CharT, class SymbolTraits, class CharTraits>
-	std::basic_ostream<CharT, CharTraits>&
-	operator<<(std::basic_ostream<CharT, CharTraits>& out,
-	           const basic_script_extent<CharT, SymbolTraits>& extent)
+	template <typename CharT, class Traits, class STraits>
+	std::basic_ostream<CharT, STraits>&
+	operator<<(std::basic_ostream<CharT, STraits>& out,
+	           const basic_script_extent<CharT, Traits>& extent)
 	{
 		const CharT left_brace = out.widen('{');
 		const CharT right_brace = out.widen('}');

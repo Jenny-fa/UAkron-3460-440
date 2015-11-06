@@ -15,7 +15,7 @@ namespace calc {
 	template <> class symbol_traits<char>;
 	template <> class symbol_traits<wchar_t>;
 
-	template <typename CharT, class Traits = symbol_traits<CharT> >
+	template <typename CharT, class Traits = symbol_traits<CharT>>
 	class basic_lexer;
 
 	/// A lexer of @c char characters.

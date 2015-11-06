@@ -43,7 +43,6 @@ namespace calc {
 		typedef basic_script_extent<CharT, Traits> extent_type;
 		typedef basic_token<CharT, Traits> token_type;
 
-	public:
 		/**
 		 * Constructs a lexer that will read from a stream buffer.
 		 * @param sb	Pointer to a stream buffer.
@@ -104,7 +103,7 @@ namespace calc {
 		typedef basic_script_position_helper<CharT, Traits> position_helper_type;
 
 		/// The symbol traits object.
-		Traits _traits;
+		traits_type _traits;
 		/// The input stream.
 		istream_type _in;
 		/// A helper object.
@@ -113,11 +112,11 @@ namespace calc {
 		/// script.
 		std::size_t _token_start_offset;
 
-		Traits& traits() noexcept {
+		traits_type& traits() noexcept {
 			return this->_traits;
 		}
 
-		const Traits& traits() const noexcept {
+		const traits_type& traits() const noexcept {
 			return this->_traits;
 		}
 
@@ -154,8 +153,8 @@ namespace calc {
 			return extent_type(this->position_helper(), this->token_start_offset(), this->offset());
 		}
 
-		bool eof() const {
-			return this->_in.eof();
+		bool eof() {
+			return Traits::is_eof(this->peek());
 		}
 
 		int_type get();

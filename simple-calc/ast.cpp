@@ -93,7 +93,7 @@ namespace calc {
 		return this->_value;
 	}
 
-	digit::operator std::intmax_t() const noexcept {
+	digit::operator int() const noexcept {
 		return this->_value;
 	}
 #else

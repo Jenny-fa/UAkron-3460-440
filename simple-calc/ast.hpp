@@ -119,7 +119,7 @@ namespace calc {
 
 #if !MOAR_DIGITS
 	/**
-	 * Represents a decimal digit.
+	 * Represents a decimal digit literal expression.
 	 */
 	class digit : public expr {
 	public:
@@ -128,14 +128,14 @@ namespace calc {
 		digit& operator=(int v);
 
 		std::intmax_t value() const noexcept;
-		operator std::intmax_t() const noexcept;
+		operator int() const noexcept;
 
 	private:
 		int _value;
 	};
 #else
 	/**
-	 * Represents a signed integral number.
+	 * Represents a signed integer literal expression.
 	 */
 	class integer : public expr {
 	public:

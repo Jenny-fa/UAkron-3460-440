@@ -23,10 +23,8 @@ namespace calc {
 		// set token offset to current offset
 		this->token_start_offset(this->offset());
 
-		const int_type i = this->peek();
-
-		if (char_traits_type::not_eof(i)) {
-			const CharT c = char_traits_type::to_char_type(i);
+		if (!this->eof()) {
+			const CharT c = Traits::to_char_type(this->peek());
 
 			if (this->traits().is_newline_start(c))
 				return this->lex_newline();
@@ -63,8 +61,8 @@ namespace calc {
 	typename basic_lexer<CharT, Traits>::int_type
 	basic_lexer<CharT, Traits>::get() {
 		const int_type c = this->_in.get();
-		if (char_traits_type::not_eof(c))
-			this->script().push_back(char_traits_type::to_char_type(c));
+		if (!Traits::is_eof(c))
+			this->script().push_back(Traits::to_char_type(c));
 		return c;
 	}
 
@@ -84,8 +82,8 @@ namespace calc {
 	template <typename CharT, class Traits>
 	void basic_lexer<CharT, Traits>::ignore() {
 		const int_type c = this->_in.peek();
-		if (char_traits_type::not_eof(c))
-			this->script().push_back(char_traits_type::to_char_type(c));
+		if (!Traits::is_eof(c))
+			this->script().push_back(Traits::to_char_type(c));
 		this->_in.ignore();
 	}
 
@@ -98,15 +96,12 @@ namespace calc {
 
 	template <typename CharT, class Traits>
 	void basic_lexer<CharT, Traits>::skip_blanks() {
-		int_type c = this->peek();
-		while (char_traits_type::not_eof(c) &&
-		       this->traits().is_blank(char_traits_type::to_char_type(c)))
-		{
+		while (!this->eof()) {
+			const CharT c = Traits::to_char_type(this->peek());
+			if (!this->traits().is_blank(c))
+				break;
 			this->ignore();
-			c = this->peek();
 		}
-		if (!char_traits_type::not_eof(c))
-			this->_in.setstate(std::ios_base::eofbit);
 	}
 
 	template <typename CharT, class Traits>
@@ -125,39 +120,35 @@ namespace calc {
 		assert(!this->eof());
 
 		do {
-			const CharT c = char_traits_type::to_char_type(this->peek());
+			const CharT c = Traits::to_char_type(this->peek());
 			if (this->traits().is_blank(c) || this->traits().is_newline_start(c))
 				break;
 			this->ignore();
-			if (!char_traits_type::not_eof(this->peek()))
-				this->_in.setstate(std::ios_base::eofbit);
 		} while (!this->eof());
 
-		return token_type(this->extent(), token_type::kind::unknown);
+		return token_type(this->extent(), token_kind::unknown);
 	}
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_eof() {
 		assert(this->eof());
-		return token_type(this->extent(), token_type::kind::eof);
+		return token_type(this->extent(), token_kind::eof);
 	}
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_newline() {
-		assert(!this->eof() && this->traits().is_newline_start(char_traits_type::to_char_type(this->peek())));
+		assert(!this->eof() && this->traits().is_newline_start(Traits::to_char_type(this->peek())));
 
-		CharT c = char_traits_type::to_char_type(this->get());
+		CharT c = Traits::to_char_type(this->get());
 
 		if (this->traits().is_line_feed(c)) {
 			this->position_helper().add_line_start(this->offset());
 		}
 		else if (this->traits().is_carriage_return(c)) {
-			if (!char_traits_type::not_eof(this->peek()))
-				this->_in.setstate(std::ios_base::eofbit);
 			if (!this->eof()) {
-				c = char_traits_type::to_char_type(this->get());
+				c = Traits::to_char_type(this->get());
 				if (this->traits().is_line_feed(c))
 					this->position_helper().add_line_start(this->offset());
 				else
@@ -165,104 +156,86 @@ namespace calc {
 			}
 		}
 
-		return token_type(this->extent(), token_type::kind::newline);
+		return token_type(this->extent(), token_kind::newline);
 	}
 
 #if !MOAR_DIGITS
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_digit() {
-		assert(!this->eof() && this->traits().is_digit(char_traits_type::to_char_type(this->peek())));
+		assert(!this->eof() && this->traits().is_digit(Traits::to_char_type(this->peek())));
 		this->ignore();
-		if (!char_traits_type::not_eof(this->peek()))
-			this->_in.setstate(std::ios_base::eofbit);
-		return token_type(this->extent(), token_type::kind::digit);
+		return token_type(this->extent(), token_kind::digit);
 	}
 #else
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_integer() {
-		assert(!this->eof() && this->traits().is_digit(char_traits_type::to_char_type(this->peek())));
+		assert(!this->eof() && this->traits().is_digit(Traits::to_char_type(this->peek())));
 		do {
-			const CharT c = char_traits_type::to_char_type(this->peek());
+			const CharT c = Traits::to_char_type(this->peek());
 			if (!this->traits().is_digit(c))
 				break;
 			this->ignore();
-			if (!char_traits_type::not_eof(this->peek()))
-				this->_in.setstate(std::ios_base::eofbit);
 		} while (!this->eof());
-		return token_type(this->extent(), token_type::kind::integer);
+		return token_type(this->extent(), token_kind::integer);
 	}
 #endif
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_addition_operator() {
-		assert(!this->eof() && this->traits().is_addition_operator(char_traits_type::to_char_type(this->peek())));
+		assert(!this->eof() && this->traits().is_addition_operator(Traits::to_char_type(this->peek())));
 		this->ignore();
-		if (!char_traits_type::not_eof(this->peek()))
-			this->_in.setstate(std::ios_base::eofbit);
-		return token_type(this->extent(), token_type::kind::addition_operator);
+		return token_type(this->extent(), token_kind::addition_operator);
 	}
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_subtraction_operator() {
-		assert(!this->eof() && this->traits().is_subtraction_operator(char_traits_type::to_char_type(this->peek())));
+		assert(!this->eof() && this->traits().is_subtraction_operator(Traits::to_char_type(this->peek())));
 		this->ignore();
-		if (!char_traits_type::not_eof(this->peek()))
-			this->_in.setstate(std::ios_base::eofbit);
-		return token_type(this->extent(), token_type::kind::subtraction_operator);
+		return token_type(this->extent(), token_kind::subtraction_operator);
 	}
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_multiplication_operator() {
-		assert(!this->eof() && this->traits().is_multiplication_operator(char_traits_type::to_char_type(this->peek())));
+		assert(!this->eof() && this->traits().is_multiplication_operator(Traits::to_char_type(this->peek())));
 		this->ignore();
-		if (!char_traits_type::not_eof(this->peek()))
-			this->_in.setstate(std::ios_base::eofbit);
-		return token_type(this->extent(), token_type::kind::multiplication_operator);
+		return token_type(this->extent(), token_kind::multiplication_operator);
 	}
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_division_operator() {
-		assert(!this->eof() && this->traits().is_division_operator(char_traits_type::to_char_type(this->peek())));
+		assert(!this->eof() && this->traits().is_division_operator(Traits::to_char_type(this->peek())));
 		this->ignore();
-		if (!char_traits_type::not_eof(this->peek()))
-			this->_in.setstate(std::ios_base::eofbit);
-		return token_type(this->extent(), token_type::kind::division_operator);
+		return token_type(this->extent(), token_kind::division_operator);
 	}
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_modulus_operator() {
-		assert(!this->eof() && this->traits().is_modulus_operator(char_traits_type::to_char_type(this->peek())));
+		assert(!this->eof() && this->traits().is_modulus_operator(Traits::to_char_type(this->peek())));
 		this->ignore();
-		if (!char_traits_type::not_eof(this->peek()))
-			this->_in.setstate(std::ios_base::eofbit);
-		return token_type(this->extent(), token_type::kind::modulus_operator);
+		return token_type(this->extent(), token_kind::modulus_operator);
 	}
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_left_parenthesis() {
-		assert(!this->eof() && this->traits().is_left_parenthesis(char_traits_type::to_char_type(this->peek())));
+		assert(!this->eof() && this->traits().is_left_parenthesis(Traits::to_char_type(this->peek())));
 		this->ignore();
-		if (!char_traits_type::not_eof(this->peek()))
-			this->_in.setstate(std::ios_base::eofbit);
-		return token_type(this->extent(), token_type::kind::left_parenthesis);
+		return token_type(this->extent(), token_kind::left_parenthesis);
 	}
 
 	template <typename CharT, class Traits>
 	typename basic_lexer<CharT, Traits>::token_type
 	basic_lexer<CharT, Traits>::lex_right_parenthesis() {
-		assert(!this->eof() && this->traits().is_right_parenthesis(char_traits_type::to_char_type(this->peek())));
+		assert(!this->eof() && this->traits().is_right_parenthesis(Traits::to_char_type(this->peek())));
 		this->ignore();
-		if (!char_traits_type::not_eof(this->peek()))
-			this->_in.setstate(std::ios_base::eofbit);
-		return token_type(this->extent(), token_type::kind::right_parenthesis);
+		return token_type(this->extent(), token_kind::right_parenthesis);
 	}
 
 	// Inhibit implicit instantiations for required instantiations, which are
