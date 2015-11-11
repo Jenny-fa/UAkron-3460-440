@@ -15,11 +15,11 @@
 namespace calc {
 	expr::~expr() {}
 
-	unary_expr::unary_expr(const expr* operand1) :
+	unary_expr::unary_expr(const expr* operand1) noexcept :
 		unary_expr(std::unique_ptr<const expr>(operand1))
 	{}
 
-	unary_expr::unary_expr(std::unique_ptr<const expr>&& operand1) :
+	unary_expr::unary_expr(std::unique_ptr<const expr>&& operand1) noexcept :
 		_operand(std::move(operand1))
 	{
 		assert(this->_operand);
@@ -31,13 +31,16 @@ namespace calc {
 		return this->_operand.get();
 	}
 
-	binary_expr::binary_expr(const expr* operand1, const expr* operand2) :
-		binary_expr(std::unique_ptr<const expr>(operand1), std::unique_ptr<const expr>(operand2))
+	binary_expr::binary_expr(const expr* operand1,
+	                         const expr* operand2) noexcept :
+		binary_expr(std::unique_ptr<const expr>(operand1),
+		            std::unique_ptr<const expr>(operand2))
 	{}
 
 	binary_expr::binary_expr(std::unique_ptr<const expr>&& operand1,
-	                         std::unique_ptr<const expr>&& operand2) :
-		_left_operand(std::move(operand1)), _right_operand(std::move(operand2))
+	                         std::unique_ptr<const expr>&& operand2) noexcept :
+		_left_operand(std::move(operand1)),
+		_right_operand(std::move(operand2))
 	{
 		assert(this->_left_operand && this->_right_operand);
 	}

@@ -56,17 +56,17 @@ namespace calc {
 
 	constexpr inline token_flags operator&(token_flags a, token_flags b) {
 		return token_flags(static_cast<unsigned int>(a)
-			& static_cast<unsigned int>(b));
+		                   & static_cast<unsigned int>(b));
 	}
 
 	constexpr inline token_flags operator|(token_flags a, token_flags b) {
 		return token_flags(static_cast<unsigned int>(a)
-			| static_cast<unsigned int>(b));
+		                   | static_cast<unsigned int>(b));
 	}
 
 	constexpr inline token_flags operator^(token_flags a, token_flags b) {
 		return token_flags(static_cast<unsigned int>(a)
-			^ static_cast<unsigned int>(b));
+		                   ^ static_cast<unsigned int>(b));
 	}
 
 	constexpr inline token_flags operator~(token_flags a) {

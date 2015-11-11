@@ -46,7 +46,7 @@ namespace calc {
 		 * @param sb	Pointer to a stream buffer.
 		 */
 		explicit basic_parser(streambuf_type* sb) :
-			_lexer(sb), _expr_start_offset(0), _tokens(), _errors()
+			_lexer(sb), _tokens(), _errors()
 		{}
 
 		/**
@@ -99,7 +99,6 @@ namespace calc {
 		typedef basic_script_position_helper<CharT, Traits> position_helper_type;
 
 		lexer_type _lexer;
-		std::size_t _expr_start_offset;
 		std::list<token_type> _tokens;
 		std::list<error_type> _errors;
 
@@ -109,6 +108,14 @@ namespace calc {
 
 		const lexer_type& lexer() const noexcept {
 			return this->_lexer;
+		}
+
+		traits_type& traits() noexcept {
+			return this->lexer().traits();
+		}
+
+		const traits_type& traits() const noexcept {
+			return this->lexer().traits();
 		}
 
 		const position_helper_type& position_helper() const noexcept {
@@ -121,19 +128,6 @@ namespace calc {
 
 		std::size_t offset() const noexcept {
 			return this->peek().extent().start_offset();
-		}
-
-		std::size_t expr_start_offset() const noexcept {
-			return this->_expr_start_offset;
-		}
-
-		void expr_start_offset(std::size_t offset) noexcept {
-			assert(offset <= this->offset());
-			this->_expr_start_offset = offset;
-		}
-
-		extent_type extent() const noexcept {
-			return extent_type(this->position_helper(), this->expr_start_offset(), this->offset());
 		}
 
 		extent_type extent_from(std::size_t start_offset) const noexcept {
@@ -191,8 +185,14 @@ namespace calc {
 		}
 
 		std::unique_ptr<const expr> parse_expr();
-		std::unique_ptr<const expr> parse_factor();
-		std::unique_ptr<const expr> parse_term();
+		std::unique_ptr<const expr> parse_primary_expr();
+		std::unique_ptr<const expr> parse_unary_expr();
+		std::unique_ptr<const expr> parse_multiplicative_expr();
+		std::unique_ptr<const expr> parse_additive_expr();
+		std::unique_ptr<const expr> parse_ordering_expr();
+		std::unique_ptr<const expr> parse_equality_expr();
+		std::unique_ptr<const expr> parse_logical_and_expr();
+		std::unique_ptr<const expr> parse_logical_or_expr();
 
 		void report_error(const error_type& error);
 		void report_error(error_id code, const extent_type& extent, const char* message);

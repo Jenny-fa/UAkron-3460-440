@@ -12,6 +12,7 @@
 
 #include "config.hpp"
 
+#include <cstdint>
 #include <iosfwd>
 #include <locale>
 #include <map>
@@ -19,6 +20,7 @@
 #include <experimental/string_view>
 
 #include "constants.hpp"
+#include "numeric_conversions.hpp"
 
 namespace calc {
 	template <typename CharT> class symbol_traits;
@@ -50,6 +52,8 @@ namespace calc {
 		typedef std::basic_istream<CharT> istream_type;
 		typedef std::basic_ostream<CharT> ostream_type;
 		typedef std::locale locale_type;
+
+		static constexpr std::size_t npos = std::size_t(-1);
 
 		static std::size_t length(const char_type* str) {
 			return char_traits_type::length(str);
@@ -87,17 +91,7 @@ namespace calc {
 			return ctype_facet.widen(c);
 		}
 
-		string_type widen(const std::string& str) const {
-			const std::ctype<CharT>& ctype_facet = std::use_facet<std::ctype<CharT>>(this->_locale);
-			const std::size_t n = str.size();
-
-			char_type* wstr = new char_type[n];
-			ctype_facet.widen(str.c_str(), str.c_str() + n, wstr);
-			string_type result(wstr, n);
-			delete[] wstr;
-
-			return result;
-		}
+		string_type widen(const std::string& str) const;
 
 		bool is_blank(char_type c) const {
 #if HAVE_STD_ISBLANK
@@ -110,6 +104,16 @@ namespace calc {
 
 		bool is_digit(char_type c) const {
 			return std::isdigit(c, this->_locale);
+		}
+
+		bool bool_value(const string_type& str, std::size_t* idx = nullptr) const;
+
+		std::int32_t int32_value(const string_type& str, std::size_t* idx = nullptr, int base = 10) const {
+#if HAVE_INT32_T_INT
+			return stoi(str, idx, base);
+#else
+			return stol(str, idx, base);
+#endif
 		}
 
 		const string_type (&newlines() const noexcept)[3] {
@@ -135,18 +139,7 @@ namespace calc {
 		string_type _false_name;
 		std::map<token_kind, string_type> _operator_table;
 
-		void init() {
-			const std::numpunct<CharT>& numpunct_facet = std::use_facet<std::numpunct<CharT>>(this->_locale);
-
-			for (std::size_t i = 0; i < 3; i++)
-				this->_newlines[i] = this->widen(symbol_base::newlines[i]);
-
-			this->_true_name = numpunct_facet.truename();
-			this->_false_name = numpunct_facet.falsename();
-
-			for (const auto& i : symbol_base::operator_table)
-				this->_operator_table[i.first] = this->widen(i.second);
-		}
+		void init();
 	};
 } // namespace calc
 

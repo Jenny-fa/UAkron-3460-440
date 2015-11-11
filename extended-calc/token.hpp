@@ -14,7 +14,6 @@
 
 #include "parser_fwd.hpp"
 #include "script.hpp"
-#include "constants.hpp"
 
 namespace calc {
 	template <typename CharT, class Traits = symbol_traits<CharT>>

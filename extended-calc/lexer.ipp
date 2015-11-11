@@ -122,7 +122,7 @@ namespace calc {
 
 	template <typename CharT, class Traits>
 	bool basic_lexer<CharT, Traits>::scan(const CharT* str, std::size_t n) {
-		const std::size_t len = n == string_type::npos ? Traits::length(str) : n;
+		const std::size_t len = n == Traits::npos ? Traits::length(str) : n;
 
 		bool result = true;
 		std::size_t count = 0;
@@ -167,7 +167,7 @@ namespace calc {
 
 		const CharT carriage_return = this->traits().widen('\r');
 		const CharT line_feed = this->traits().widen('\n');
-		const std::map<token_kind, string_type>& operator_table = this->traits().operator_table();
+		const auto& operator_table = this->traits().operator_table();
 
 		CharT c = Traits::to_char_type(this->peek());
 

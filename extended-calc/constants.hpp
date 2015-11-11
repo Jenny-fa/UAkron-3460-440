@@ -17,6 +17,7 @@ namespace calc {
 	enum class error_id {
 		unknown_token,
 		unexpected_token,
+		integer_out_of_range,
 		missing_end_parenthesis
 	};
 
@@ -64,22 +65,24 @@ namespace calc {
 		logical_or_precedence = 6 << 6,
 		unary_operator_precedence_mask = ((1 << 1) - 1) << 5,
 		binary_operator_precedence_mask = ((1 << 4) - 1) << 6,
-		operator_precedence_mask = unary_operator_precedence_mask | binary_operator_precedence_mask
+		operator_precedence_mask = unary_operator_precedence_mask | binary_operator_precedence_mask,
+		unary_operator_mask = unary_operator | unary_operator_precedence_mask,
+		binary_operator_mask = binary_operator | binary_operator_precedence_mask
 	};
 
 	constexpr inline token_flags operator&(token_flags a, token_flags b) {
 		return token_flags(static_cast<unsigned int>(a)
-			& static_cast<unsigned int>(b));
+		                   & static_cast<unsigned int>(b));
 	}
 
 	constexpr inline token_flags operator|(token_flags a, token_flags b) {
 		return token_flags(static_cast<unsigned int>(a)
-			| static_cast<unsigned int>(b));
+		                   | static_cast<unsigned int>(b));
 	}
 
 	constexpr inline token_flags operator^(token_flags a, token_flags b) {
 		return token_flags(static_cast<unsigned int>(a)
-			^ static_cast<unsigned int>(b));
+		                   ^ static_cast<unsigned int>(b));
 	}
 
 	constexpr inline token_flags operator~(token_flags a) {

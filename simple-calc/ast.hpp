@@ -44,8 +44,8 @@ namespace calc {
 	 */
 	class unary_expr : public expr {
 	public:
-		explicit unary_expr(const expr* operand1);
-		explicit unary_expr(std::unique_ptr<const expr>&& operand1);
+		explicit unary_expr(const expr* operand1) noexcept;
+		explicit unary_expr(std::unique_ptr<const expr>&& operand1) noexcept;
 		virtual ~unary_expr() = 0;
 
 		const expr* operand() const noexcept;
@@ -59,9 +59,9 @@ namespace calc {
 	 */
 	class binary_expr : public expr {
 	public:
-		binary_expr(const expr* operand1, const expr* operand2);
+		binary_expr(const expr* operand1, const expr* operand2) noexcept;
 		binary_expr(std::unique_ptr<const expr>&& operand1,
-		            std::unique_ptr<const expr>&& operand2);
+		            std::unique_ptr<const expr>&& operand2) noexcept;
 		virtual ~binary_expr() = 0;
 
 		const expr* left_operand() const noexcept;
@@ -123,7 +123,7 @@ namespace calc {
 	 */
 	class digit : public expr {
 	public:
-		digit(int v = int());
+		digit(int v);
 
 		digit& operator=(int v);
 
@@ -135,11 +135,11 @@ namespace calc {
 	};
 #else
 	/**
-	 * Represents a signed integer literal expression.
+	 * Represents an integer literal expression.
 	 */
 	class integer : public expr {
 	public:
-		integer(std::intmax_t v = std::intmax_t()) noexcept;
+		integer(std::intmax_t v) noexcept;
 
 		#define DECLARE_INTEGER_COMPOUND_ASSIGNMENT_OPERATOR(OP) \
 			integer& operator OP##=(std::intmax_t v) noexcept;

@@ -14,11 +14,10 @@ int main(int argc, char* argv[]) {
 	calc::init(argc, argv);
 
 #if HAVE_UNISTD_H
-	if (optind < argc)
+	if (optind < argc) {
 #else
-	if (argc > 1)
+	if (argc > 1) {
 #endif
-	{
 		calc::report_error("Too many arguments.");
 		return 2;
 	}
@@ -33,10 +32,14 @@ int main(int argc, char* argv[]) {
 				std::unique_ptr<const calc::expr> expr = parser.next_expr();
 				if (!expr)
 					break;
-				std::cout << expr->value() << std::endl;
+				std::unique_ptr<calc::value> value = expr->value();
+				std::cout << std::boolalpha << *value.get() << std::endl;
 			}
 			catch (const calc::parse_error& exception) {
 				calc::report_error(exception);
+			}
+			catch (const std::invalid_argument& exception) {
+				calc::report_error("Invalid operand types.");
 			}
 			catch (const std::domain_error& exception) {
 				calc::report_error("Attempt to divide by zero.");

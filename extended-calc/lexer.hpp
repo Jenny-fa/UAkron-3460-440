@@ -166,13 +166,13 @@ namespace calc {
 		void skip_blanks();
 		void rewind_blanks();
 
-		bool matches(const CharT* str, std::size_t n = string_type::npos);
+		bool matches(const CharT* str, std::size_t n = Traits::npos);
 
 		bool matches(const string_type& str) {
 			return this->matches(str.c_str(), str.size());
 		}
 
-		bool scan(const CharT* str, std::size_t n = string_type::npos);
+		bool scan(const CharT* str, std::size_t n = Traits::npos);
 
 		bool scan(const string_type& str) {
 			return this->scan(str.c_str(), str.size());

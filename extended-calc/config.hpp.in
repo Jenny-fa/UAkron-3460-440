@@ -55,4 +55,10 @@
 /* Define to 1 if you have the std::string numeric conversion functions. */
 #cmakedefine HAVE_STD_STRING_NUMERIC_CONVERSIONS 1
 
+/* Define if int32_t is an int. */
+#cmakedefine HAVE_INT32_T_INT 1
+
+/* Define if int32_t is a long. */
+#cmakedefine HAVE_INT32_T_LONG 1
+
 #endif // CALC_CONFIG_HPP

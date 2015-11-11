@@ -91,7 +91,7 @@ namespace calc {
 #endif
 
 	inline int
-	stoi(const std::string& str, std::size_t* idx = 0, int base = 10) {
+	stoi(const std::string& str, std::size_t* idx = nullptr, int base = 10) {
 #if HAVE_STD_STRING_NUMERIC_CONVERSIONS
 		return std::stoi(str, idx, base);
 #else
@@ -99,8 +99,17 @@ namespace calc {
 #endif
 	}
 
+	inline long
+	stol(const std::string& str, std::size_t* idx = nullptr, int base = 10) {
+#if HAVE_STD_STRING_NUMERIC_CONVERSIONS
+		return std::stol(str, idx, base);
+#else
+		return stoa(&STD::strtol, "stol", str.c_str(), idx, base);
+#endif
+	}
+
 	inline long long
-	stoll(const std::string& str, std::size_t* idx = 0, int base = 10) {
+	stoll(const std::string& str, std::size_t* idx = nullptr, int base = 10) {
 #if HAVE_STD_STRING_NUMERIC_CONVERSIONS
 		return std::stoll(str, idx, base);
 #else
@@ -109,7 +118,7 @@ namespace calc {
 	}
 
 	inline int
-	stoi(const std::wstring& str, std::size_t* idx = 0, int base = 10) {
+	stoi(const std::wstring& str, std::size_t* idx = nullptr, int base = 10) {
 #if HAVE_STD_STRING_NUMERIC_CONVERSIONS
 		return std::stoi(str, idx, base);
 #else
@@ -117,8 +126,17 @@ namespace calc {
 #endif
 	}
 
+	inline long
+	stol(const std::wstring& str, std::size_t* idx = nullptr, int base = 10) {
+#if HAVE_STD_STRING_NUMERIC_CONVERSIONS
+		return std::stol(str, idx, base);
+#else
+		return stoa(&STD::wcstol, "stol", str.c_str(), idx, base);
+#endif
+	}
+
 	inline long long
-	stoll(const std::wstring& str, std::size_t* idx = 0, int base = 10) {
+	stoll(const std::wstring& str, std::size_t* idx = nullptr, int base = 10) {
 #if HAVE_STD_STRING_NUMERIC_CONVERSIONS
 		return std::stoll(str, idx, base);
 #else

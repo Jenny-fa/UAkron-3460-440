@@ -7,6 +7,7 @@ include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
 include(CheckCXXSymbolExists)
 include(CheckIncludeFileCXX)
+include(CheckTypeSize)
 
 # Add a project.
 project(extended-calc VERSION 0.1 LANGUAGES CXX)
@@ -39,13 +40,28 @@ check_cxx_compiler_flag(-std=c++14 CXX_COMPILER_HAS_STDCXX14_FLAG)
 if(CXX_COMPILER_HAS_STDCXX14_FLAG)
 	set(CMAKE_REQUIRED_FLAGS -std=c++14)
 endif()
+
 check_include_file_cxx(unistd.h HAVE_UNISTD_H)
 check_include_file_cxx(experimental/string_view HAVE_EXPERIMENTAL_STRING_VIEW)
 if(NOT HAVE_EXPERIMENTAL_STRING_VIEW)
 	message(FATAL_ERROR "${PROJECT_NAME} requires the C++ standard library header <experimental/string_view>.")
 endif()
-check_cxx_symbol_exists("std::isblank<char>(char, std::locale)" locale HAVE_STD_ISBLANK)
 
+check_type_size(int32_t SIZEOF_INT32_T LANGUAGE CXX)
+if(SIZEOF_INT32_T STREQUAL "")
+	message(FATAL_ERROR "${PROJECT_NAME} requires that the C library header <stdint.h> defines int32_t.")
+endif()
+foreach(type int long)
+	string(TOUPPER ${type} type_upper)
+	string(MAKE_C_IDENTIFIER ${type_upper} type_name)
+	check_type_size(${type} SIZEOF_${type_name} BUILTIN_TYPES_ONLY LANGUAGE CXX)
+	if(SIZEOF_INT32_T EQUAL SIZEOF_${type_name})
+		set(HAVE_INT32_T_${type_name} TRUE)
+		break()
+	endif()
+endforeach()
+
+check_cxx_symbol_exists("std::isblank<char>(char, std::locale)" locale HAVE_STD_ISBLANK)
 set(TEST_NUMERIC_CONVERSIONS_SOURCE "
 #if USE_STD_NAMESPACE
 #  include <cstdlib>
@@ -65,7 +81,6 @@ int main() {
   return 0;
 }
 ")
-
 set(CMAKE_REQUIRED_DEFINITIONS_SAVE ${CMAKE_REQUIRED_DEFINITIONS})
 set(CMAKE_REQUIRED_DEFINITIONS -DUSE_STD_NAMESPACE=0)
 check_cxx_source_compiles("${TEST_NUMERIC_CONVERSIONS_SOURCE}" HAVE_NUMERIC_CONVERSIONS)
@@ -75,7 +90,6 @@ endif()
 set(CMAKE_REQUIRED_DEFINITIONS -DUSE_STD_NAMESPACE=1)
 check_cxx_source_compiles("${TEST_NUMERIC_CONVERSIONS_SOURCE}" HAVE_STD_NUMERIC_CONVERSIONS)
 set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS_SAVE})
-
 check_cxx_source_compiles("
 #include <string>
 
@@ -83,6 +97,7 @@ int main() {
   std::string str(\"42\");
   std::wstring wstr(L\"42\");
   int intv = std::stoi(str), wintv = std::stoi(wstr);
+  long longv = std::stol(str), wlongv = std::stol(wstr);
   long long llongv = std::stoll(str), wllongv = std::stoll(wstr);
   return 0;
 }

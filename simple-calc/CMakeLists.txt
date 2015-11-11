@@ -84,6 +84,7 @@ int main() {
   std::string str(\"42\");
   std::wstring wstr(L\"42\");
   int intv = std::stoi(str), wintv = std::stoi(wstr);
+  long longv = std::stol(str), wlongv = std::stol(wstr);
   long long llongv = std::stoll(str), wllongv = std::stoll(wstr);
   return 0;
 }

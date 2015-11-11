@@ -61,6 +61,8 @@ namespace calc {
 		typedef typename Traits::string_type string_type;
 		typedef typename Traits::string_view_type string_view_type;
 
+		basic_script_position_helper(const basic_script_position_helper&) = delete;
+
 		const string_type& script() const noexcept {
 			return this->_script;
 		}

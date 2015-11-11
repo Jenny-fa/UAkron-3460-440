@@ -17,7 +17,8 @@
 
 namespace calc {
 	template <typename CharT, class Traits>
-	std::unique_ptr<const expr> basic_parser<CharT, Traits>::next_expr(bool skip_newlines) {
+	std::unique_ptr<const expr>
+	basic_parser<CharT, Traits>::next_expr(bool skip_newlines) {
 		// lazily extract first token from input stream
 		if (this->tokens().empty())
 			this->tokens().push_back(this->lexer().next_token());
@@ -40,10 +41,8 @@ namespace calc {
 			// skip the rest of the tokens in this line
 			while (!this->eof() && this->peek().kind() != token_kind::newline)
 				this->ignore();
-			token.flags(token_flags::has_error);
-			this->report_error(error_id::unexpected_token,
-				this->extent_from(token.extent().start_offset()),
-				"Expected newline before expression.");
+			token.flags(token.flags() | token_flags::has_error);
+			this->report_error(error_id::unexpected_token, this->extent_from(token.extent().start_offset()), "Expected newline before expression.");
 		}
 
 		return std::move(result);
@@ -75,7 +74,7 @@ namespace calc {
 			}
 		}
 
-exit:
+	exit:
 		return std::move(result);
 	}
 
@@ -108,7 +107,7 @@ exit:
 			}
 		}
 
-exit:
+	exit:
 		return std::move(result);
 	}
 
@@ -135,28 +134,26 @@ exit:
 				if (this->peek().kind() == token_kind::right_parenthesis)
 					this->ignore();
 				else {
-					token.flags(token_flags::has_error);
-					this->report_error(error_id::missing_end_parenthesis,
-						this->extent_from(token.extent().start_offset()),
-						"Expression in parentheses is missing ')'.");
+					token.flags(token.flags() | token_flags::has_error);
+					this->report_error(error_id::missing_end_parenthesis, this->extent_from(token.extent().start_offset()), "Expression in parentheses is missing ')'.");
 				}
 				break;
 			case token_kind::eof:
-				token.flags(token_flags::has_error);
+				token.flags(token.flags() | token_flags::has_error);
 				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected end of file.");
 				break;
 			case token_kind::newline:
-				token.flags(token_flags::has_error);
+				token.flags(token.flags() | token_flags::has_error);
 				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected end of line.");
 				break;
 			case token_kind::unknown:
 				this->ignore();
-				token.flags(token_flags::has_error);
+				token.flags(token.flags() | token_flags::has_error);
 				this->report_error(error_id::unknown_token, token.extent(), "Unrecognized token.");
 				break;
 			default:
 				this->ignore();
-				token.flags(token_flags::has_error);
+				token.flags(token.flags() | token_flags::has_error);
 				this->report_error(error_id::unexpected_token, token.extent(), "Unexpected token.");
 				break;
 		}
@@ -170,9 +167,10 @@ exit:
 		auto error_equal = [&error] (const error_type& i) {
 			return i.code() == error.code() && i.extent() == error.extent();
 		};
-		if (std::none_of(this->errors().cbegin(), this->errors().cend(), error_equal))
+		if (std::none_of(this->errors().cbegin(), this->errors().cend(), error_equal)) {
 			this->errors().push_back(error);
-		throw error;
+			throw error;
+		}
 	}
 
 	template <typename CharT, class Traits>

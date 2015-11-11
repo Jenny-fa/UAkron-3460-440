@@ -14,11 +14,10 @@ int main(int argc, char* argv[]) {
 	calc::init(argc, argv);
 
 #if HAVE_UNISTD_H
-	if (optind < argc)
+	if (optind < argc) {
 #else
-	if (argc > 1)
+	if (argc > 1) {
 #endif
-	{
 		calc::report_error("Too many arguments.");
 		return 2;
 	}
