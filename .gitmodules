@@ -1,0 +1,4 @@
+[submodule "beaker-codegen"]
+	path = beaker-codegen
+	url = https://github.com/Jenny-fa/beaker
+	branch = codegen

@@ -10,6 +10,8 @@ minimum, a C++11 compiler.
 
 1. simple-calc
 2. extended-calc
+3. llvm
+4. beaker-codegen
 
 ## Contact
 
